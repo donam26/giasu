@@ -6,26 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::create('ai_messages', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('conversation_id')->constrained('ai_conversations')->onDelete('cascade');
+            $table->foreignId('conversation_id')->constrained('ai_conversations')->cascadeOnDelete();
             $table->enum('role', ['user', 'assistant']);
             $table->text('content');
-            $table->json('metadata')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('ai_messages');
     }
-};
+}; 

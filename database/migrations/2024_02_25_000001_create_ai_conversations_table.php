@@ -6,16 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::create('ai_conversations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->enum('conversation_type', ['tutor_recommendation', 'learning_advice', 'subject_guidance']);
-            $table->enum('status', ['active', 'completed', 'abandoned'])->default('active');
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('status')->default('active');
             $table->json('context_data')->nullable();
             $table->timestamp('last_interaction')->nullable();
             $table->timestamps();
@@ -23,11 +19,8 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::dropIfExists('ai_conversations');
     }
-};
+}; 

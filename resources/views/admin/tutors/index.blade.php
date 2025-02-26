@@ -1,0 +1,102 @@
+@extends('layouts.admin')
+
+@section('page_title', 'Quản Lý Gia Sư')
+
+@section('content')
+<div class="bg-white shadow rounded-lg">
+    <div class="p-6">
+        <h2 class="text-xl font-semibold text-gray-900">Danh Sách Gia Sư</h2>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gia Sư</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trình Độ</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Môn Dạy</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kinh Nghiệm</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng Thái</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @forelse($tutors as $tutor)
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <img class="h-10 w-10 rounded-full" src="{{ $tutor->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($tutor->user->name) }}" alt="{{ $tutor->user->name }}">
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">{{ $tutor->user->name }}</div>
+                                <div class="text-sm text-gray-500">{{ $tutor->user->email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ $tutor->education_level }}</div>
+                        <div class="text-sm text-gray-500">{{ $tutor->university }}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900">
+                            @foreach($tutor->subjects as $subject)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1 mb-1">
+                                {{ $subject->name }}
+                            </span>
+                            @endforeach
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ $tutor->teaching_experience }} năm
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        @switch($tutor->status)
+                            @case('active')
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Hoạt Động
+                                </span>
+                                @break
+                            @case('inactive')
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    Ngừng Hoạt Động
+                                </span>
+                                @break
+                            @default
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Chờ Duyệt
+                                </span>
+                        @endswitch
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="{{ route('admin.tutors.show', $tutor) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                            Chi Tiết
+                        </a>
+                        <a href="{{ route('admin.tutors.edit', $tutor) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">
+                            Sửa
+                        </a>
+                        <form action="{{ route('admin.tutors.destroy', $tutor) }}" method="POST" class="inline-block">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Bạn có chắc chắn muốn xóa gia sư này?')">
+                                Xóa
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                        Không có gia sư nào
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div class="px-6 py-4">
+        {{ $tutors->links() }}
+    </div>
+</div>
+@endsection 

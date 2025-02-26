@@ -6,6 +6,11 @@ use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\AiAdvisorController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\TutorController as AdminTutorController;
+use App\Http\Controllers\Admin\SubjectController as AdminSubjectController;
+use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -50,3 +55,12 @@ Route::get('/subjects/{subject}', [SubjectController::class, 'show'])->name('sub
 
 Route::get('/ai-advisor', [AiAdvisorController::class, 'index'])->name('ai-advisor');
 Route::post('/ai-advisor/chat', [AiAdvisorController::class, 'chat'])->name('ai-advisor.chat');
+
+// Admin routes
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('users', UserController::class);
+    Route::resource('tutors', AdminTutorController::class);
+    Route::resource('subjects', AdminSubjectController::class);
+    Route::resource('bookings', AdminBookingController::class);
+});

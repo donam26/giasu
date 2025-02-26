@@ -8,9 +8,12 @@ use App\Models\ClassLevel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class TutorController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index(Request $request)
     {
         $tutors = Tutor::query()
@@ -36,7 +39,7 @@ class TutorController extends Controller
             ->when($request->online_only, function ($query) {
                 return $query->where('can_teach_online', true);
             })
-            ->where('status', 'active')
+            ->where('status', '=', 'active')
             ->where('is_verified', true)
             ->orderBy($request->sort_by ?? 'rating', $request->sort_order ?? 'desc')
             ->paginate(12);

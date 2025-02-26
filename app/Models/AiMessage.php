@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class AiMessage extends Model
+class AIMessage extends Model
 {
     use HasFactory;
+
+    protected $table = 'ai_messages';
 
     protected $fillable = [
         'conversation_id',
@@ -20,8 +23,8 @@ class AiMessage extends Model
         'metadata' => 'array'
     ];
 
-    public function conversation()
+    public function conversation(): BelongsTo
     {
-        return $this->belongsTo(AiConversation::class, 'conversation_id');
+        return $this->belongsTo(AIConversation::class, 'conversation_id');
     }
 } 
