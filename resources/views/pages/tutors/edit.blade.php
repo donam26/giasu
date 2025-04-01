@@ -1,4 +1,6 @@
-<x-app-layout>
+@extends('layouts.app')
+
+@section('content')
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -161,6 +163,45 @@
                                 </div>
                             </div>
 
+                            <!-- Quản lý giá cho từng môn học -->
+                            <div class="sm:col-span-2 mt-4">
+                                <h3 class="text-lg font-medium text-gray-900 mb-3">Quản lý giá cho từng môn học</h3>
+                                <p class="text-sm text-gray-600 mb-4">Thiết lập giá cụ thể cho từng môn học. Nếu để trống, hệ thống sẽ sử dụng giá mặc định.</p>
+                                
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Môn học</th>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá mỗi giờ (VNĐ)</th>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chi tiết kinh nghiệm</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200" id="subject-prices-container">
+                                            @foreach($tutor->subjects as $subject)
+                                                <tr class="subject-price-row" data-subject-id="{{ $subject->id }}">
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                        {{ $subject->name }} ({{ $subject->category }})
+                                                        <input type="hidden" name="subject_prices[{{ $subject->id }}][id]" value="{{ $subject->id }}">
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        <input type="number" name="subject_prices[{{ $subject->id }}][price]" 
+                                                            value="{{ $subject->pivot->price_per_hour }}" 
+                                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                            placeholder="Giá mặc định">
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        <textarea name="subject_prices[{{ $subject->id }}][experience]" rows="2"
+                                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                            placeholder="Chi tiết kinh nghiệm giảng dạy môn này">{{ $subject->pivot->experience_details }}</textarea>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
                             <!-- Cấp học -->
                             <div class="sm:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700">
@@ -196,4 +237,103 @@
             </div>
         </div>
     </div>
-</x-app-layout> 
+
+<script>
+    // Script để cập nhật bảng giá môn học khi chọn/bỏ chọn môn học
+    document.addEventListener('DOMContentLoaded', function() {
+        const subjectCheckboxes = document.querySelectorAll('input[name="subjects[]"]');
+        const priceContainer = document.getElementById('subject-prices-container');
+        
+        // Cập nhật hiển thị bảng giá
+        function updatePriceTable() {
+            // Lấy giá mặc định hiện tại
+            const defaultPrice = document.getElementById('hourly_rate').value || 0;
+            
+            // Xóa tất cả các hàng hiện tại và tạo lại bảng
+            priceContainer.innerHTML = '';
+            
+            // Thêm lại các hàng cho các môn học đã chọn
+            subjectCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const subjectId = checkbox.value;
+                    const subjectLabel = document.querySelector(`label[for="subject_${subjectId}"]`);
+                    const subjectName = subjectLabel ? subjectLabel.textContent.trim() : `Môn học ${subjectId}`;
+                    
+                    // Nếu có thể tìm thông tin category
+                    let categoryName = "";
+                    const parentElement = subjectLabel.closest('.space-y-2');
+                    if (parentElement) {
+                        const categoryHeader = parentElement.querySelector('h4');
+                        if (categoryHeader) {
+                            categoryName = categoryHeader.textContent.trim();
+                        }
+                    }
+                    
+                    // Tìm giá và mô tả kinh nghiệm hiện tại (nếu có)
+                    let existingPrice = defaultPrice;
+                    let existingExperience = '';
+                    
+                    const existingPriceInput = document.querySelector(`input[name="subject_prices[${subjectId}][price]"]`);
+                    if (existingPriceInput) {
+                        existingPrice = existingPriceInput.value;
+                    }
+                    
+                    const existingExpTextarea = document.querySelector(`textarea[name="subject_prices[${subjectId}][experience]"]`);
+                    if (existingExpTextarea) {
+                        existingExperience = existingExpTextarea.value;
+                    }
+                    
+                    // Tạo hàng mới
+                    createNewPriceRow(subjectId, subjectName, categoryName, existingPrice, existingExperience);
+                }
+            });
+        }
+
+        // Tạo hàng mới cho môn học đã chọn
+        function createNewPriceRow(subjectId, subjectName, categoryName, price, experience) {
+            const newRow = document.createElement('tr');
+            newRow.className = 'subject-price-row';
+            newRow.dataset.subjectId = subjectId;
+            
+            newRow.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    ${subjectName} ${categoryName ? `(${categoryName})` : ''}
+                    <input type="hidden" name="subject_prices[${subjectId}][id]" value="${subjectId}">
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <input type="number" name="subject_prices[${subjectId}][price]" 
+                        value="${price}" 
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Giá mặc định">
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <textarea name="subject_prices[${subjectId}][experience]" rows="2"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Chi tiết kinh nghiệm giảng dạy môn này">${experience}</textarea>
+                </td>
+            `;
+            
+            priceContainer.appendChild(newRow);
+        }
+
+        // Khởi tạo bảng giá
+        updatePriceTable();
+
+        // Lắng nghe sự kiện thay đổi trên các checkbox môn học
+        subjectCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updatePriceTable);
+        });
+        
+        // Lắng nghe sự kiện thay đổi giá mặc định
+        document.getElementById('hourly_rate').addEventListener('change', function() {
+            // Cập nhật giá mặc định cho các môn chưa được thiết lập giá
+            const emptyPriceInputs = document.querySelectorAll('input[name^="subject_prices"][name$="[price]"]');
+            emptyPriceInputs.forEach(input => {
+                if (!input.value) {
+                    input.value = this.value;
+                }
+            });
+        });
+    });
+</script>
+@endsection 

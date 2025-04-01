@@ -16,15 +16,20 @@
                     </p>
                     <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                         <div class="rounded-md shadow">
-                            <a href="{{ route('tutors.index') }}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
-                                Tìm Gia Sư
+                            <a href="{{ route('tutors.register') }}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
+                                Đăng ký trở thành gia sư
                             </a>
                         </div>
                         <div class="mt-3 sm:mt-0 sm:ml-3">
-                            <a href="{{ route('ai-advisor') }}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10">
-                                Tư Vấn AI
+                            <a href="{{ route('tutors.index') }}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10">
+                                Đăng ký học
                             </a>
                         </div>
+                    </div>
+                    <div class="mt-3 text-center lg:text-left">
+                        <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-indigo-600">
+                            Đã có tài khoản? Đăng nhập
+                        </a>
                     </div>
                 </div>
             </main>

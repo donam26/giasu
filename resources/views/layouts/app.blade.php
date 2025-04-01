@@ -58,6 +58,36 @@
                                 </x-slot>
 
                                 <x-slot name="content">
+                                    @php
+                                        // Kiểm tra user có phải là gia sư hay không một cách an toàn
+                                        $isTutor = false;
+                                        $user = auth()->user();
+                                        if ($user) {
+                                            try {
+                                                $isTutor = $user->tutor()->exists();
+                                            } catch(\Exception $e) {
+                                                // Không làm gì nếu có lỗi
+                                            }
+                                        }
+                                    @endphp
+                                    
+                                    @if(auth()->user()->is_admin)
+                                        <x-dropdown-link :href="route('admin.dashboard')">
+                                            {{ __('Admin Dashboard') }}
+                                        </x-dropdown-link>
+                                    @elseif($isTutor)
+                                        <x-dropdown-link :href="route('tutor.dashboard')">
+                                            {{ __('Bảng Điều Khiển') }}
+                                        </x-dropdown-link>
+                                    @else
+                                        <x-dropdown-link :href="route('student.bookings.index')">
+                                            {{ __('Buổi Học Của Tôi') }}
+                                        </x-dropdown-link>
+                                        <x-dropdown-link :href="route('student.bookings.tutors')">
+                                            {{ __('Gia Sư Của Tôi') }}
+                                        </x-dropdown-link>
+                                    @endif
+                                    
                                     <x-dropdown-link :href="route('profile.edit')">
                                         {{ __('Hồ Sơ') }}
                                     </x-dropdown-link>
@@ -74,8 +104,12 @@
                                 </x-slot>
                             </x-dropdown>
                         @else
-                            <a href="{{ route('login') }}" class="text-sm text-gray-700 underline">Đăng Nhập</a>
-                            <a href="{{ route('register') }}" class="ml-4 text-sm text-gray-700 underline">Đăng Ký</a>
+                            <a href="{{ route('tutors.register') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-3">
+                                Đăng ký trở thành gia sư
+                            </a>
+                            <a href="{{ route('login') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Đăng nhập
+                            </a>
                         @endauth
                     </div>
                 </div>
@@ -84,6 +118,68 @@
 
         <!-- Page Content -->
         <main>
+            @if(session('success'))
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                    <div class="rounded-md bg-green-50 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-green-800">
+                                    {{ session('success') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                    <div class="rounded-md bg-red-50 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-red-800">
+                                    {{ session('error') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                    <div class="rounded-md bg-red-50 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <div class="text-sm text-red-700">
+                                    <ul class="list-disc pl-5 space-y-1">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{ $slot ?? '' }}
             @yield('content')
         </main>
 
@@ -95,12 +191,12 @@
                         <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">Về Chúng Tôi</h3>
                         <ul role="list" class="mt-4 space-y-4">
                             <li>
-                                <a href="#" class="text-base text-gray-500 hover:text-gray-900">
+                                <a href="{{ route('about-us') }}" class="text-base text-gray-500 hover:text-gray-900">
                                     Giới Thiệu
                                 </a>
                             </li>
                             <li>
-                                <a href="#" class="text-base text-gray-500 hover:text-gray-900">
+                                <a href="{{ route('contact') }}" class="text-base text-gray-500 hover:text-gray-900">
                                     Liên Hệ
                                 </a>
                             </li>
@@ -111,12 +207,12 @@
                         <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">Dịch Vụ</h3>
                         <ul role="list" class="mt-4 space-y-4">
                             <li>
-                                <a href="#" class="text-base text-gray-500 hover:text-gray-900">
+                                <a href="{{ route('tutors.index') }}" class="text-base text-gray-500 hover:text-gray-900">
                                     Tìm Gia Sư
                                 </a>
                             </li>
                             <li>
-                                <a href="#" class="text-base text-gray-500 hover:text-gray-900">
+                                <a href="{{ route('tutors.register') }}" class="text-base text-gray-500 hover:text-gray-900">
                                     Trở Thành Gia Sư
                                 </a>
                             </li>
@@ -127,12 +223,12 @@
                         <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">Hỗ Trợ</h3>
                         <ul role="list" class="mt-4 space-y-4">
                             <li>
-                                <a href="#" class="text-base text-gray-500 hover:text-gray-900">
+                                <a href="{{ route('faq') }}" class="text-base text-gray-500 hover:text-gray-900">
                                     FAQ
                                 </a>
                             </li>
                             <li>
-                                <a href="#" class="text-base text-gray-500 hover:text-gray-900">
+                                <a href="{{ route('guide') }}" class="text-base text-gray-500 hover:text-gray-900">
                                     Hướng Dẫn
                                 </a>
                             </li>
@@ -143,12 +239,12 @@
                         <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">Pháp Lý</h3>
                         <ul role="list" class="mt-4 space-y-4">
                             <li>
-                                <a href="#" class="text-base text-gray-500 hover:text-gray-900">
+                                <a href="{{ route('terms') }}" class="text-base text-gray-500 hover:text-gray-900">
                                     Điều Khoản
                                 </a>
                             </li>
                             <li>
-                                <a href="#" class="text-base text-gray-500 hover:text-gray-900">
+                                <a href="{{ route('privacy-policy') }}" class="text-base text-gray-500 hover:text-gray-900">
                                     Bảo Mật
                                 </a>
                             </li>

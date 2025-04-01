@@ -4,8 +4,11 @@
 
 @section('content')
 <div class="bg-white shadow rounded-lg">
-    <div class="p-6">
+    <div class="p-6 flex justify-between items-center">
         <h2 class="text-xl font-semibold text-gray-900">Danh Sách Gia Sư</h2>
+        <a href="{{ route('admin.tutors.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            Thêm Gia Sư
+        </a>
     </div>
 
     <div class="overflow-x-auto">
@@ -26,7 +29,7 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
                             <div class="flex-shrink-0 h-10 w-10">
-                                <img class="h-10 w-10 rounded-full" src="{{ $tutor->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($tutor->user->name) }}" alt="{{ $tutor->user->name }}">
+                                <img class="h-10 w-10 rounded-full" src="{{ $tutor->avatar ? Storage::url($tutor->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($tutor->user->name) }}" alt="{{ $tutor->user->name }}">
                             </div>
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">{{ $tutor->user->name }}</div>

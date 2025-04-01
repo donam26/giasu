@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
+use App\Helpers\CurrencyHelper;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,5 +22,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Blade::component('app-layout', \App\View\Components\AppLayout::class);
+        // Thêm directive để định dạng tiền tệ VNĐ
+        Blade::directive('vnd', function ($expression) {
+            return "<?php echo App\Helpers\CurrencyHelper::formatVND($expression); ?>";
+        });
     }
 }

@@ -15,8 +15,18 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
+        // Lưu URL chuyển hướng vào session nếu có
+        if ($request->has('redirect')) {
+            $request->session()->put('redirect', $request->input('redirect'));
+        }
+        
+        // Lưu URL chuyển hướng từ session flash nếu có
+        if (session()->has('redirect')) {
+            session()->reflash(); // Giữ lại flash data cho request tiếp theo
+        }
+        
         return view('auth.login');
     }
 
@@ -28,6 +38,13 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        // Kiểm tra xem có URL chuyển hướng trong session không
+        if ($request->session()->has('redirect')) {
+            $redirectUrl = $request->session()->get('redirect');
+            $request->session()->forget('redirect');
+            return redirect()->intended($redirectUrl);
+        }
 
         return redirect()->intended(RouteServiceProvider::HOME);
     }

@@ -59,4 +59,27 @@ class Tutor extends Model
     {
         return $this->hasMany(AiRecommendation::class);
     }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Lấy lịch rảnh của gia sư
+     */
+    public function availabilities()
+    {
+        return $this->hasMany(TutorAvailability::class);
+    }
 }

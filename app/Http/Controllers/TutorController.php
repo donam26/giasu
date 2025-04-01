@@ -7,6 +7,7 @@ use App\Models\Subject;
 use App\Models\ClassLevel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -16,34 +17,79 @@ class TutorController extends Controller
 
     public function index(Request $request)
     {
-        $tutors = Tutor::query()
-            ->when($request->subject_id, function ($query, $subject_id) {
-                return $query->whereHas('subjects', function ($q) use ($subject_id) {
-                    $q->where('subjects.id', $subject_id);
-                });
-            })
-            ->when($request->class_level_id, function ($query, $class_level_id) {
-                return $query->whereHas('classLevels', function ($q) use ($class_level_id) {
-                    $q->where('class_levels.id', $class_level_id);
-                });
-            })
-            ->when($request->min_price, function ($query, $min_price) {
-                return $query->where('hourly_rate', '>=', $min_price);
-            })
-            ->when($request->max_price, function ($query, $max_price) {
-                return $query->where('hourly_rate', '<=', $max_price);
-            })
-            ->when($request->rating, function ($query, $rating) {
-                return $query->where('rating', '>=', $rating);
-            })
-            ->when($request->online_only, function ($query) {
-                return $query->where('can_teach_online', true);
-            })
-            ->where('status', '=', 'active')
-            ->where('is_verified', true)
-            ->orderBy($request->sort_by ?? 'rating', $request->sort_order ?? 'desc')
-            ->paginate(12);
-
+        // Truy vấn ban đầu
+        $query = Tutor::query();
+        
+        // Thêm debug
+        Log::info('TutorController@index - Số lượng tutor trước khi lọc: ' . $query->count());
+        
+        // Lọc theo môn học
+        if ($request->subject_id) {
+            $query->whereHas('subjects', function ($q) use ($request) {
+                $q->where('subjects.id', $request->subject_id);
+            });
+            Log::info('TutorController@index - Lọc theo subject_id: ' . $request->subject_id);
+            Log::info('TutorController@index - Số lượng sau khi lọc theo môn học: ' . $query->count());
+        }
+        
+        // Lọc theo cấp học
+        if ($request->class_level_id) {
+            $query->whereHas('classLevels', function ($q) use ($request) {
+                $q->where('class_levels.id', $request->class_level_id);
+            });
+            Log::info('TutorController@index - Lọc theo class_level_id: ' . $request->class_level_id);
+            Log::info('TutorController@index - Số lượng sau khi lọc theo cấp học: ' . $query->count());
+        }
+        
+        // Lọc theo khoảng giá
+        if ($request->min_price) {
+            $query->where('hourly_rate', '>=', $request->min_price);
+            Log::info('TutorController@index - Lọc theo min_price: ' . $request->min_price);
+            Log::info('TutorController@index - Số lượng sau khi lọc theo giá tối thiểu: ' . $query->count());
+        }
+        
+        if ($request->max_price) {
+            $query->where('hourly_rate', '<=', $request->max_price);
+            Log::info('TutorController@index - Lọc theo max_price: ' . $request->max_price);
+            Log::info('TutorController@index - Số lượng sau khi lọc theo giá tối đa: ' . $query->count());
+        }
+        
+        // Lọc theo đánh giá
+        if ($request->rating) {
+            $query->where('rating', '>=', $request->rating);
+            Log::info('TutorController@index - Lọc theo rating: ' . $request->rating);
+            Log::info('TutorController@index - Số lượng sau khi lọc theo đánh giá: ' . $query->count());
+        }
+        
+        // Lọc theo dạy online
+        if ($request->online_only) {
+            $query->where('can_teach_online', true);
+            Log::info('TutorController@index - Lọc theo online_only');
+            Log::info('TutorController@index - Số lượng sau khi lọc theo dạy online: ' . $query->count());
+        }
+        
+        // Chỉ lấy gia sư đã được kích hoạt và xác minh
+        $query->where('status', '=', 'active')
+              ->where('is_verified', true);
+        
+        Log::info('TutorController@index - Số lượng sau khi lọc theo trạng thái và xác minh: ' . $query->count());
+        Log::info('TutorController@index - Active tutors count: ' . Tutor::where('status', 'active')->count());
+        Log::info('TutorController@index - Verified tutors count: ' . Tutor::where('is_verified', true)->count());
+        
+        // Sắp xếp
+        if ($request->sort_by) {
+            // Nếu có tùy chọn sắp xếp, áp dụng sắp xếp theo tùy chọn
+            $query->orderBy($request->sort_by, $request->sort_order ?? 'desc');
+        } else {
+            // Nếu không có tùy chọn sắp xếp, sử dụng sắp xếp mặc định, ở đây là theo ID
+            $query->orderBy('id', 'desc');
+        }
+        
+        // Phân trang
+        $tutors = $query->with(['user', 'subjects'])->paginate(12);
+        
+        Log::info('TutorController@index - Số lượng tutors trả về: ' . $tutors->total());
+        
         return view('pages.tutors.index', [
             'tutors' => $tutors,
             'subjects' => Subject::where('is_active', true)->get(),
@@ -53,13 +99,28 @@ class TutorController extends Controller
 
     public function show(Tutor $tutor)
     {
+        $reviews = $tutor->reviews()->with(['student', 'booking.subject'])->latest()->paginate(5);
+        $reviewsCount = $tutor->reviews()->count();
+        
         return view('pages.tutors.show', [
-            'tutor' => $tutor->load(['subjects', 'classLevels'])
+            'tutor' => $tutor->load(['subjects', 'classLevels']),
+            'reviews' => $reviews,
+            'reviews_count' => $reviewsCount
         ]);
     }
 
     public function create()
     {
+        // Nếu người dùng chưa đăng nhập, chuyển hướng đến trang đăng ký
+        if (!Auth::check()) {
+            return redirect()->route('register');
+        }
+        
+        // Nếu người dùng đã đăng nhập và đã là gia sư, chuyển hướng đến dashboard
+        if (Auth::user()->tutor) {
+            return redirect()->route('tutor.dashboard');
+        }
+        
         return view('pages.tutors.create', [
             'subjects' => Subject::where('is_active', true)->get(),
             'classLevels' => ClassLevel::where('is_active', true)->get()
@@ -68,6 +129,18 @@ class TutorController extends Controller
 
     public function store(Request $request)
     {
+        // Kiểm tra đăng nhập
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Vui lòng đăng nhập để đăng ký làm gia sư.');
+        }
+
+        // Kiểm tra nếu đã là gia sư
+        if (Auth::user()->tutor) {
+            return redirect()->route('tutor.dashboard')
+                ->with('error', 'Bạn đã đăng ký làm gia sư.');
+        }
+
         $validated = $request->validate([
             'education_level' => 'required|string|max:255',
             'university' => 'nullable|string|max:255',
@@ -83,32 +156,73 @@ class TutorController extends Controller
             'subjects' => 'required|array|min:1',
             'subjects.*' => 'exists:subjects,id',
             'class_levels' => 'required|array|min:1',
-            'class_levels.*' => 'exists:class_levels,id'
+            'class_levels.*' => 'exists:class_levels,id',
+            'subject_prices' => 'nullable|array',
+            'subject_prices.*' => 'nullable|array',
+            'subject_prices.*.price' => 'nullable|numeric|min:0',
+            'subject_prices.*.experience' => 'nullable|string',
         ]);
 
-        $tutor = new Tutor($validated);
-        $tutor->user_id = Auth::id();
-        $tutor->status = 'pending';
+        try {
+            $tutor = new Tutor($validated);
+            $tutor->user_id = Auth::id();
+            $tutor->status = 'pending';
 
-        if ($request->hasFile('avatar')) {
-            $tutor->avatar = $request->file('avatar')->store('avatars', 'public');
-        }
-
-        if ($request->hasFile('certification_files')) {
-            $paths = [];
-            foreach ($request->file('certification_files') as $file) {
-                $paths[] = $file->store('certifications', 'public');
+            if ($request->hasFile('avatar')) {
+                $tutor->avatar = $request->file('avatar')->store('avatars', 'public');
             }
-            $tutor->certification_files = $paths;
+
+            if ($request->hasFile('certification_files')) {
+                $paths = [];
+                foreach ($request->file('certification_files') as $file) {
+                    $paths[] = $file->store('certifications', 'public');
+                }
+                $tutor->certification_files = $paths;
+            }
+
+            $tutor->save();
+
+            // Xử lý dữ liệu môn học và giá cho từng môn
+            if ($request->has('subjects')) {
+                $syncData = [];
+                
+                // Xử lý dữ liệu giá cho từng môn học
+                foreach ($request->subjects as $subjectId) {
+                    $pricePerHour = $tutor->hourly_rate; // Giá mặc định
+                    $experienceDetails = null;
+                    
+                    // Nếu có thông tin giá cho môn học này
+                    if (isset($request->subject_prices[$subjectId])) {
+                        // Nếu có thiết lập giá cụ thể, sử dụng giá đó
+                        if (isset($request->subject_prices[$subjectId]['price']) && 
+                            is_numeric($request->subject_prices[$subjectId]['price']) && 
+                            $request->subject_prices[$subjectId]['price'] > 0) {
+                            $pricePerHour = $request->subject_prices[$subjectId]['price'];
+                        }
+                        
+                        // Lưu chi tiết kinh nghiệm
+                        if (isset($request->subject_prices[$subjectId]['experience'])) {
+                            $experienceDetails = $request->subject_prices[$subjectId]['experience'];
+                        }
+                    }
+                    
+                    $syncData[$subjectId] = [
+                        'price_per_hour' => $pricePerHour,
+                        'experience_details' => $experienceDetails
+                    ];
+                }
+                
+                $tutor->subjects()->attach($syncData);
+            }
+
+            $tutor->classLevels()->attach($request->class_levels);
+
+            return redirect()->route('tutors.pending', $tutor)
+                ->with('success', 'Hồ sơ gia sư của bạn đã được tạo và đang chờ xét duyệt.');
+        } catch (\Exception $e) {
+            return back()->withInput()
+                ->with('error', 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại.');
         }
-
-        $tutor->save();
-
-        $tutor->subjects()->attach($request->subjects);
-        $tutor->classLevels()->attach($request->class_levels);
-
-        return redirect()->route('tutors.show', $tutor)
-            ->with('success', 'Hồ sơ gia sư của bạn đã được tạo và đang chờ xét duyệt.');
     }
 
     public function edit(Tutor $tutor)
@@ -141,7 +255,11 @@ class TutorController extends Controller
             'subjects' => 'required|array|min:1',
             'subjects.*' => 'exists:subjects,id',
             'class_levels' => 'required|array|min:1',
-            'class_levels.*' => 'exists:class_levels,id'
+            'class_levels.*' => 'exists:class_levels,id',
+            'subject_prices' => 'nullable|array',
+            'subject_prices.*' => 'nullable|array',
+            'subject_prices.*.price' => 'nullable|numeric|min:0',
+            'subject_prices.*.experience' => 'nullable|string',
         ]);
 
         if ($request->hasFile('avatar')) {
@@ -166,7 +284,39 @@ class TutorController extends Controller
 
         $tutor->update($validated);
 
-        $tutor->subjects()->sync($request->subjects);
+        // Xử lý dữ liệu môn học và giá cho từng môn
+        if ($request->has('subjects')) {
+            $syncData = [];
+            
+            // Xử lý dữ liệu giá cho từng môn học
+            foreach ($request->subjects as $subjectId) {
+                $pricePerHour = $tutor->hourly_rate; // Giá mặc định
+                $experienceDetails = null;
+                
+                // Nếu có thông tin giá cho môn học này
+                if (isset($request->subject_prices[$subjectId])) {
+                    // Nếu có thiết lập giá cụ thể, sử dụng giá đó
+                    if (isset($request->subject_prices[$subjectId]['price']) && 
+                        is_numeric($request->subject_prices[$subjectId]['price']) && 
+                        $request->subject_prices[$subjectId]['price'] > 0) {
+                        $pricePerHour = $request->subject_prices[$subjectId]['price'];
+                    }
+                    
+                    // Lưu chi tiết kinh nghiệm
+                    if (isset($request->subject_prices[$subjectId]['experience'])) {
+                        $experienceDetails = $request->subject_prices[$subjectId]['experience'];
+                    }
+                }
+                
+                $syncData[$subjectId] = [
+                    'price_per_hour' => $pricePerHour,
+                    'experience_details' => $experienceDetails
+                ];
+            }
+            
+            $tutor->subjects()->sync($syncData);
+        }
+
         $tutor->classLevels()->sync($request->class_levels);
 
         return redirect()->route('tutors.show', $tutor)
@@ -183,5 +333,27 @@ class TutorController extends Controller
     {
         // TODO: Implement bookings list
         return view('pages.tutors.bookings');
+    }
+
+    /**
+     * Hiển thị trang đang chờ xét duyệt
+     */
+    public function pending(Tutor $tutor)
+    {
+        $this->authorize('update', $tutor);
+        
+        if ($tutor->status !== 'pending') {
+            return redirect()->route('tutors.show', $tutor);
+        }
+        
+        return view('pages.tutors.pending', compact('tutor'));
+    }
+
+    /**
+     * Hiển thị trang giới thiệu về việc đăng ký làm gia sư
+     */
+    public function register()
+    {
+        return view('pages.tutors.register');
     }
 }

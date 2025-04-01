@@ -1,4 +1,6 @@
-<x-app-layout>
+@extends('layouts.app')
+
+@section('content')
     <div class="bg-gray-50 min-h-screen">
         <!-- Hero Section -->
         <div class="bg-gradient-to-r from-indigo-600 to-purple-600 py-12">
@@ -78,27 +80,15 @@
                             </div>
 
                             <!-- Teaching Method -->
-                            <div class="flex items-center space-x-4">
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="online_only" name="online_only" value="1" {{ request('online_only') ? 'checked' : '' }}
-                                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                                    <label for="online_only" class="ml-2 block text-sm text-gray-700">
-                                        Dạy trực tuyến
-                                    </label>
-                                </div>
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="offline_only" name="offline_only" value="1" {{ request('offline_only') ? 'checked' : '' }}
-                                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                                    <label for="offline_only" class="ml-2 block text-sm text-gray-700">
-                                        Dạy tại nhà
-                                    </label>
-                                </div>
-                            </div>
+                                    <input type="hidden" hidden id="online_only" name="online_only" value="1" {{ request('online_only') ? 'checked' : '' }}
+                                           class="h-4 w-4  text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                           
 
                             <!-- Sort -->
                             <div class="space-y-2">
                                 <label for="sort_by" class="block text-sm font-medium text-gray-700">Sắp Xếp Theo</label>
                                 <select id="sort_by" name="sort_by" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md shadow-sm">
+                                    <option value="">Tất cả</option>
                                     <option value="rating" {{ request('sort_by') == 'rating' ? 'selected' : '' }}>Đánh giá cao nhất</option>
                                     <option value="hourly_rate" {{ request('sort_by') == 'hourly_rate' ? 'selected' : '' }}>Học phí thấp nhất</option>
                                     <option value="total_teaching_hours" {{ request('sort_by') == 'total_teaching_hours' ? 'selected' : '' }}>Kinh nghiệm nhiều nhất</option>
@@ -124,7 +114,7 @@
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1">
                         <div class="relative">
                             <img class="h-48 w-full object-cover" 
-                                 src="{{ $tutor->avatar ? Storage::url($tutor->avatar) : 'https://images.unsplash.com/photo-1544717305-2782549b5136?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80' }}" 
+                                 src="{{ $tutor->avatar ? Storage::url($tutor->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($tutor->user->name) }}" 
                                  alt="{{ $tutor->user->name }}">
                             @if($tutor->is_verified)
                                 <div class="absolute top-4 right-4 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center">
@@ -187,23 +177,18 @@
                                             Dạy trực tuyến
                                         </span>
                                     @endif
-                                    @if(!empty($tutor->teaching_locations))
-                                        <span class="flex items-center">
-                                            <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                            Dạy tại nhà
-                                        </span>
-                                    @endif
                                 </div>
                             </div>
 
                             <div class="mt-6 flex items-center justify-between">
-                                <span class="text-2xl font-bold text-indigo-600">
-                                    {{ number_format($tutor->hourly_rate) }}đ
-                                    <span class="text-sm font-normal text-gray-500">/giờ</span>
-                                </span>
+                                <p class="text-md text-gray-900 mt-2">
+                                    <span class="flex items-center text-sm text-gray-500">
+                                        <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-14a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V4z" clip-rule="evenodd" />
+                                        </svg>
+                                        @vnd($tutor->hourly_rate)/giờ
+                                    </span>
+                                </p>
                                 <a href="{{ route('tutors.show', $tutor) }}" 
                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     Xem Chi Tiết
@@ -236,4 +221,4 @@
             @endif
         </div>
     </div>
-</x-app-layout> 
+@endsection 

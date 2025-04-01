@@ -10,13 +10,16 @@ return new class extends Migration
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained('users');
-            $table->foreignId('tutor_id')->constrained('tutors');
-            $table->foreignId('subject_id')->constrained('subjects');
+            $table->foreignId('student_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('tutor_id')->constrained('tutors')->onDelete('cascade');
+            $table->foreignId('subject_id')->constrained()->onDelete('cascade');
             $table->dateTime('start_time');
             $table->dateTime('end_time');
             $table->enum('status', ['pending', 'confirmed', 'completed', 'cancelled'])->default('pending');
             $table->text('notes')->nullable();
+            $table->decimal('price_per_hour', 10, 2);
+            $table->decimal('total_amount', 10, 2);
+            $table->timestamp('completed_at')->nullable();
             $table->timestamps();
         });
     }

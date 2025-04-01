@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use App\Models\Tutor;
 use App\Models\Subject;
 use App\Models\ClassLevel;
@@ -11,6 +12,29 @@ class TutorSeeder extends Seeder
 {
     public function run(): void
     {
+        // Lấy 10 user đầu tiên để tạo gia sư
+        $users = User::where('is_admin', false)
+            ->take(10)
+            ->get();
+
+        // Tạo hồ sơ gia sư cho mỗi user
+        foreach ($users as $user) {
+            $tutor = Tutor::create([
+                'user_id' => $user->id,
+                'education_level' => $this->getRandomEducationLevel(),
+                'university' => 'Đại học ' . $this->getRandomUniversity(),
+                'major' => $this->getRandomMajor(),
+                'teaching_experience' => 'Có ' . rand(1, 5) . ' năm kinh nghiệm giảng dạy',
+                'bio' => 'Là một giáo viên nhiệt tình, tâm huyết với nghề giảng dạy. Luôn cố gắng truyền đạt kiến thức một cách dễ hiểu nhất cho học sinh.',
+                'hourly_rate' => rand(150000, 300000),
+                'is_verified' => true,
+                'status' => 'active',
+                'can_teach_online' => true,
+                'teaching_locations' => ['Hà Nội', 'Online'],
+            ]);
+        }
+
+        // Gán môn học và cấp học cho các gia sư
         $tutors = Tutor::all();
         $subjects = Subject::all();
         $classLevels = ClassLevel::all();
@@ -34,5 +58,38 @@ class TutorSeeder extends Seeder
                 ]);
             }
         }
+    }
+
+    private function getRandomEducationLevel()
+    {
+        $levels = ['Đại học', 'Thạc sĩ', 'Tiến sĩ', 'Giáo viên', 'Sinh viên năm cuối'];
+        return $levels[array_rand($levels)];
+    }
+
+    private function getRandomUniversity()
+    {
+        $universities = [
+            'Quốc gia Hà Nội',
+            'Bách khoa Hà Nội',
+            'Sư phạm Hà Nội',
+            'Ngoại thương',
+            'Kinh tế Quốc dân'
+        ];
+        return $universities[array_rand($universities)];
+    }
+
+    private function getRandomMajor()
+    {
+        $majors = [
+            'Công nghệ thông tin',
+            'Toán học',
+            'Vật lý',
+            'Hóa học',
+            'Ngôn ngữ Anh',
+            'Sư phạm Toán',
+            'Sư phạm Văn',
+            'Sư phạm Lý'
+        ];
+        return $majors[array_rand($majors)];
     }
 } 
