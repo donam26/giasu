@@ -11,7 +11,7 @@
             </p>
         </div>
 
-        <form method="POST" action="{{ route('tutor.schedule.store') }}">
+        <form method="POST" action="{{ route('tutor.availability.store') }}">
             @csrf
             <div class="border-t border-gray-200">
                 <dl>
@@ -82,14 +82,14 @@
                         <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                             <div class="flex items-center space-x-4">
                                 <div class="flex items-center">
-                                    <input id="status-available" name="status" type="radio" value="available" {{ old('status', 'available') === 'available' ? 'checked' : '' }}
+                                    <input id="status-available" name="status" type="radio" value="active" {{ old('status', 'active') === 'active' ? 'checked' : '' }}
                                         class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
                                     <label for="status-available" class="ml-2 block text-sm text-gray-700">
                                         Khả dụng (có thể dạy)
                                     </label>
                                 </div>
                                 <div class="flex items-center">
-                                    <input id="status-unavailable" name="status" type="radio" value="unavailable" {{ old('status') === 'unavailable' ? 'checked' : '' }}
+                                    <input id="status-unavailable" name="status" type="radio" value="inactive" {{ old('status') === 'inactive' ? 'checked' : '' }}
                                         class="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300">
                                     <label for="status-unavailable" class="ml-2 block text-sm text-gray-700">
                                         Không khả dụng (không thể dạy)
@@ -129,7 +129,7 @@
                     @enderror
 
                     <div class="bg-white px-4 py-5 sm:px-6 flex justify-end space-x-3">
-                        <a href="{{ route('tutor.schedule.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <a href="{{ route('tutor.availability.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             Hủy
                         </a>
                         <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">

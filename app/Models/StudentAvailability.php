@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class TutorAvailability extends Model
+class StudentAvailability extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -16,7 +16,7 @@ class TutorAvailability extends Model
      * @var array
      */
     protected $fillable = [
-        'tutor_id',
+        'student_id',
         'day_of_week',
         'date',
         'start_time',
@@ -49,11 +49,11 @@ class TutorAvailability extends Model
     ];
 
     /**
-     * Lấy gia sư sở hữu lịch rảnh này
+     * Lấy học sinh sở hữu lịch rảnh này
      */
-    public function tutor()
+    public function student()
     {
-        return $this->belongsTo(Tutor::class);
+        return $this->belongsTo(Student::class);
     }
 
     /**
@@ -61,9 +61,9 @@ class TutorAvailability extends Model
      */
     public function hasBookingConflicts()
     {
-        $tutor = $this->tutor;
+        $student = $this->student;
         
-        $query = Booking::where('tutor_id', $tutor->id)
+        $query = Booking::where('student_id', $student->id)
             ->where('status', '!=', 'cancelled')
             ->where('day_of_week', $this->day_of_week);
             
@@ -115,4 +115,4 @@ class TutorAvailability extends Model
     {
         return $this->status === 'active';
     }
-}
+} 

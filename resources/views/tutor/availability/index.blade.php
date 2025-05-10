@@ -16,14 +16,14 @@
             </div>
 
             <div class="mt-4 md:mt-0 flex flex-col sm:flex-row gap-2">
-                <a href="{{ route('tutor.schedule.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 transform hover:scale-105">
+                <a href="{{ route('tutor.availability.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 transform hover:scale-105">
                     <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
                     Thêm Lịch Rảnh
                 </a>
                 
-                <a href="{{ route('tutor.schedule.quick') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 transform hover:scale-105">
+                <a href="{{ route('tutor.availability.quick') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 transform hover:scale-105">
                     <svg class="-ml-1 mr-2 h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -64,13 +64,13 @@
                         Bắt đầu bằng cách thêm lịch rảnh cho các khung giờ bạn có thể dạy học. Điều này giúp học sinh dễ dàng tìm thấy và đặt lịch với bạn.
                     </p>
                     <div class="mt-6 flex justify-center gap-3">
-                        <a href="{{ route('tutor.schedule.create') }}" class="inline-flex items-center px-5 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 transform hover:scale-105">
+                        <a href="{{ route('tutor.availability.create') }}" class="inline-flex items-center px-5 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 transform hover:scale-105">
                             <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
                             Thêm Lịch Rảnh
                         </a>
-                        <a href="{{ route('tutor.schedule.quick') }}" class="inline-flex items-center px-5 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 transform hover:scale-105">
+                        <a href="{{ route('tutor.availability.quick') }}" class="inline-flex items-center px-5 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 transform hover:scale-105">
                             <svg class="-ml-1 mr-2 h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
@@ -137,7 +137,7 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @if(isset($availability->status) && $availability->status == 'unavailable')
+                                        @if(isset($availability->status) && $availability->status == 'inactive')
                                             <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -154,13 +154,13 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <a href="{{ route('tutor.schedule.edit', $availability) }}" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded-md inline-flex items-center mr-2 transition-colors">
+                                        <a href="{{ route('tutor.availability.edit', $availability->id) }}" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded-md inline-flex items-center mr-2 transition-colors">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
                                             Sửa
                                         </a>
-                                        <form action="{{ route('tutor.schedule.destroy', $availability) }}" method="POST" class="inline-block">
+                                        <form action="{{ route('tutor.availability.destroy', $availability->id) }}" method="POST" class="inline-block">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded-md inline-flex items-center transition-colors" onclick="return confirm('Bạn có chắc muốn xóa lịch rảnh này?')">
@@ -215,8 +215,8 @@
                             
                             @if($dayAvailabilities->count() > 0)
                                 @foreach($dayAvailabilities as $availability)
-                                    <div class="mb-2 p-2 text-sm rounded-md cursor-pointer transition-all duration-300 hover:shadow-md {{ $availability->status == 'unavailable' ? 'bg-red-100 border border-red-200 text-red-800' : 'bg-green-100 border border-green-200 text-green-800' }}"
-                                         onclick="window.location.href='{{ route('tutor.schedule.edit', $availability) }}'">
+                                    <div class="mb-2 p-2 text-sm rounded-md cursor-pointer transition-all duration-300 hover:shadow-md {{ $availability->status == 'inactive' ? 'bg-red-100 border border-red-200 text-red-800' : 'bg-green-100 border border-green-200 text-green-800' }}"
+                                         onclick="window.location.href='{{ route('tutor.availability.edit', $availability->id) }}'">
                                         <div class="flex items-center">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -226,7 +226,7 @@
                                         <div class="text-xs mt-1 flex justify-between items-center">
                                             <span>{{ round((strtotime($availability->end_time->format('H:i')) - strtotime($availability->start_time->format('H:i'))) / 3600, 1) }} giờ</span>
                                             <span>
-                                                @if($availability->status == 'unavailable')
+                                                @if($availability->status == 'inactive')
                                                     <span class="inline-flex items-center text-xs">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -269,7 +269,7 @@
                                 <span class="text-xs text-gray-600">Không khả dụng</span>
                             </div>
                         </div>
-                        <a href="{{ route('tutor.schedule.create') }}" class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800">
+                        <a href="{{ route('tutor.availability.create') }}" class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>

@@ -1,9 +1,34 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    .bgyl {
+        background-color: #ffc107;
+    }
+</style>
 <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="px-4 sm:px-0 mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900">Danh sách buổi học</h1>
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-semibold text-gray-800">Danh Sách Buổi Học</h1>
+            <div class="space-x-2">
+                <a href="{{ route('student.bookings.tutors') }}" class="inline-block px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                    Gia sư của tôi
+                </a>
+                <a href="{{ route('student.reschedules.index') }}" class="bgyl inline-block px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">
+                    Yêu cầu đổi lịch
+                    @php
+                        $pendingCount = Auth::user()->bookings()
+                            ->where('reschedule_requested', true)
+                            ->count();
+                    @endphp
+                    @if($pendingCount > 0)
+                        <span class="ml-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                            {{ $pendingCount }}
+                        </span>
+                    @endif
+                </a>
+            </div>
+        </div>
     </div>
 
     <div class="flex flex-col">

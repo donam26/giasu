@@ -90,59 +90,64 @@
         <a href="{{ route('tutor.bookings.index') }}" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
             Quay lại
         </a>
-        @if($booking->status == 'pending')
-            <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST" class="inline-block ml-3">
-                @csrf
-                @method('PATCH')
-                <input type="hidden" name="status" value="confirmed">
-                <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                    Xác nhận
-                </button>
-            </form>
-        @endif
-        @if($booking->status == 'confirmed')
-            <button type="button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" onclick="openCompletionModal()">
-                Hoàn thành
-            </button>
-            
-            <!-- Modal hoàn thành buổi học -->
-            <div id="completionModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center hidden z-50">
-                <div class="bg-white rounded-lg p-6 max-w-md w-full">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Hoàn thành buổi học</h3>
-                    <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST">
-                        @csrf
-                        @method('PATCH')
-                        <input type="hidden" name="status" value="completed">
-                        
-                        <div class="mb-4">
-                            <label for="completion_notes" class="block text-sm font-medium text-gray-700 mb-1">
-                                Ghi chú hoàn thành buổi học
-                            </label>
-                            <textarea name="completion_notes" id="completion_notes" rows="3" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Nhập ghi chú về buổi học" required></textarea>
-                        </div>
-                        
-                        <div class="flex justify-end space-x-3 mt-5">
-                            <button type="button" onclick="closeCompletionModal()" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Hủy
-                            </button>
-                            <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Xác nhận hoàn thành
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        @endif
-        @if($booking->status == 'pending' || $booking->status == 'confirmed')
-            <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST" class="inline-block ml-3">
-                @csrf
-                @method('PATCH')
-                <input type="hidden" name="status" value="cancelled">
-                <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn hủy buổi học này?')" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                    Hủy
-                </button>
-            </form>
-        @endif
+        <div class="flex items-center space-x-4 mt-6">
+            @if(in_array($booking->status, ['pending', 'confirmed']))
+                <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="status" value="confirmed">
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                        Xác nhận
+                    </button>
+                </form>
+            @endif
+
+            @if(in_array($booking->status, ['confirmed']))
+                <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="status" value="scheduled">
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        Lên lịch
+                    </button>
+                </form>
+            @endif
+
+            @if(in_array($booking->status, ['confirmed', 'scheduled']) && !$booking->hasPendingRescheduleRequest() && now()->diffInHours($booking->start_time, false) >= 24)
+                <a href="{{ route('tutor.bookings.reschedule', $booking) }}" class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                    Đổi lịch
+                </a>
+            @endif
+
+            @if($booking->hasPendingRescheduleRequest())
+                <a href="{{ route('tutor.reschedules.show', $booking->latestRescheduleRequest()) }}" class="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-md hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                    Xem yêu cầu đổi lịch
+                </a>
+            @endif
+
+            @if(in_array($booking->status, ['confirmed', 'scheduled']))
+                <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="status" value="completed">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        Hoàn thành
+                    </button>
+                </form>
+            @endif
+
+            @if(in_array($booking->status, ['pending', 'confirmed', 'scheduled']))
+                <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="status" value="cancelled">
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                        onclick="return confirm('Bạn có chắc chắn muốn hủy buổi học này?')">
+                        Hủy
+                    </button>
+                </form>
+            @endif
+        </div>
     </div>
 </div>
 @endsection

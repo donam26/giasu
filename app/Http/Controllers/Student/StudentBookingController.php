@@ -28,8 +28,144 @@ class StudentBookingController extends Controller
 
     public function create(Tutor $tutor)
     {
+        // Lấy lịch rảnh của gia sư cho 14 ngày tới
+        $startDate = now()->startOfDay();
+        $endDate = now()->addDays(14)->endOfDay();
+        
+        // Thêm log để theo dõi
+        \Illuminate\Support\Facades\Log::info('Lấy lịch rảnh của gia sư', [
+            'tutor_id' => $tutor->id,
+            'start_date' => $startDate->format('Y-m-d'),
+            'end_date' => $endDate->format('Y-m-d')
+        ]);
+        
+        // Lấy lịch rảnh cụ thể theo ngày
+        $dateSpecificAvailabilities = $tutor->availabilities()
+            ->where('status', 'active')
+            ->whereNotNull('date')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->orderBy('date')
+            ->orderBy('start_time')
+            ->get();
+        
+        \Illuminate\Support\Facades\Log::info('Lịch rảnh cụ thể theo ngày', [
+            'count' => $dateSpecificAvailabilities->count()
+        ]);
+        
+        // Lấy lịch rảnh theo ngày trong tuần (lặp lại hàng tuần)
+        $weeklyAvailabilities = $tutor->availabilities()
+            ->where('status', 'active')
+            ->where('is_recurring', true)
+            ->whereNull('date')
+            ->orderBy('day_of_week')
+            ->orderBy('start_time')
+            ->get();
+        
+        \Illuminate\Support\Facades\Log::info('Lịch rảnh lặp lại hàng tuần', [
+            'count' => $weeklyAvailabilities->count(),
+            'sample' => $weeklyAvailabilities->take(2)->toArray()
+        ]);
+        
+        // Tạo mảng chứa lịch rảnh theo ngày
+        $availabilitiesByDate = [];
+        
+        // Thêm lịch rảnh cụ thể theo ngày
+        foreach ($dateSpecificAvailabilities as $availability) {
+            $date = $availability->date->format('Y-m-d');
+            if (!isset($availabilitiesByDate[$date])) {
+                $availabilitiesByDate[$date] = [];
+            }
+            $availabilitiesByDate[$date][] = $availability;
+        }
+        
+        // Thêm lịch rảnh hàng tuần vào các ngày tương ứng
+        $currentDate = clone $startDate;
+        while ($currentDate <= $endDate) {
+            $dayOfWeek = $currentDate->dayOfWeek; // 0 (Chủ nhật) đến 6 (Thứ bảy)
+            $currentDateStr = $currentDate->format('Y-m-d');
+            
+            // Nếu chưa có lịch rảnh cụ thể cho ngày này, thêm lịch rảnh hàng tuần
+            if (!isset($availabilitiesByDate[$currentDateStr])) {
+                $availabilitiesByDate[$currentDateStr] = [];
+            }
+            
+            // Lọc và thêm các lịch rảnh hàng tuần cho ngày này
+            foreach ($weeklyAvailabilities as $availability) {
+                if ((int)$availability->day_of_week === $dayOfWeek) {
+                    $availabilitiesByDate[$currentDateStr][] = $availability;
+                }
+            }
+            
+            // Nếu không có lịch rảnh nào cho ngày này, xóa ngày đó khỏi mảng
+            if (empty($availabilitiesByDate[$currentDateStr])) {
+                unset($availabilitiesByDate[$currentDateStr]);
+            }
+            
+            $currentDate->addDay();
+        }
+        
+        \Illuminate\Support\Facades\Log::info('Tổng số ngày có lịch rảnh trước khi lọc', [
+            'count' => count($availabilitiesByDate),
+            'dates' => array_keys($availabilitiesByDate)
+        ]);
+        
+        // Lọc ra các khung giờ rảnh thực sự (không trùng với booking đã có và chưa qua)
+        foreach ($availabilitiesByDate as $date => &$availabilities) {
+            $dateObj = \Carbon\Carbon::parse($date);
+            
+            // Lọc các khung giờ phù hợp
+            $availabilities = collect($availabilities)->filter(function($availability) use ($dateObj, $tutor) {
+                // Tạo đối tượng datetime đầy đủ từ date và time
+                $startDateTime = clone $dateObj;
+                $endDateTime = clone $dateObj;
+                
+                // Thêm giờ và phút
+                $startDateTime->setTime(
+                    $availability->start_time->format('H'), 
+                    $availability->start_time->format('i')
+                );
+                $endDateTime->setTime(
+                    $availability->end_time->format('H'), 
+                    $availability->end_time->format('i')
+                );
+                
+                // Nếu thời gian đã qua, bỏ qua
+                if ($startDateTime < now()) {
+                    return false;
+                }
+                
+                // Kiểm tra xem đã có booking nào vào khung giờ này chưa
+                $hasConflict = Booking::where('tutor_id', $tutor->id)
+                    ->whereIn('status', ['confirmed', 'scheduled', 'pending'])
+                    ->where(function($query) use ($startDateTime, $endDateTime) {
+                        $query->whereBetween('start_time', [$startDateTime, $endDateTime])
+                            ->orWhereBetween('end_time', [$startDateTime, $endDateTime])
+                            ->orWhere(function($q) use ($startDateTime, $endDateTime) {
+                                $q->where('start_time', '<=', $startDateTime)
+                                  ->where('end_time', '>=', $endDateTime);
+                            });
+                    })->exists();
+                
+                return !$hasConflict;
+            })->values()->toArray();
+            
+            // Nếu không còn khung giờ nào sau khi lọc, xóa ngày đó
+            if (count($availabilities) === 0) {
+                unset($availabilitiesByDate[$date]);
+            }
+        }
+        
+        \Illuminate\Support\Facades\Log::info('Số ngày có lịch rảnh sau khi lọc', [
+            'count' => count($availabilitiesByDate),
+            'dates' => array_keys($availabilitiesByDate)
+        ]);
+        
+        // Sắp xếp mảng theo thứ tự ngày
+        ksort($availabilitiesByDate);
+        
         return view('student.bookings.create', [
             'tutor' => $tutor->load(['subjects', 'classLevels']),
+            'availabilitiesByDate' => $availabilitiesByDate
         ]);
     }
 
@@ -37,39 +173,156 @@ class StudentBookingController extends Controller
     {
         $validated = $request->validate([
             'subject_id' => 'required|exists:subjects,id',
-            'start_time' => 'required|date|after:now',
-            'duration' => 'required|integer|min:1|max:4',
+            'time_slot' => 'required|string',
+            'selected_date' => 'required|date',
             'notes' => 'nullable|string|max:500',
         ]);
 
-        // Tính thời gian kết thúc
-        $startTime = Carbon::parse($validated['start_time']);
-        $duration = intval($validated['duration']);
-        $endTime = Carbon::parse($validated['start_time'])->addHours($duration);
+        // Phân tích time_slot để lấy giờ bắt đầu và kết thúc
+        $timeSlotParts = explode('_', $validated['time_slot']);
+        if (count($timeSlotParts) !== 2) {
+            return back()->withInput()->with('error', 'Định dạng khung giờ không hợp lệ.');
+        }
+
+        $startTimeStr = $timeSlotParts[0];
+        $endTimeStr = $timeSlotParts[1];
+
+        // Tạo đối tượng datetime từ ngày và giờ
+        $startTime = Carbon::parse($validated['selected_date'] . ' ' . $startTimeStr);
+        $endTime = Carbon::parse($validated['selected_date'] . ' ' . $endTimeStr);
+
+        // Kiểm tra xem thời gian có nằm trong quá khứ không
+        if ($startTime->isPast()) {
+            return back()->withInput()->with('error', 'Không thể đặt lịch cho thời gian đã qua.');
+        }
+
+        // Kiểm tra xem thời gian đặt lịch có nằm trong lịch rảnh của gia sư không
+        if (!$this->isWithinTutorAvailability($tutor, $startTime, $endTime)) {
+            return back()->withInput()->with('error', 'Thời gian bạn chọn không nằm trong lịch rảnh của gia sư. Vui lòng chọn thời gian khác.');
+        }
+
+        // Kiểm tra xem thời gian đặt lịch có trùng với lịch đã đặt của gia sư không
+        if ($this->hasBookingConflict($tutor, $startTime, $endTime)) {
+            return back()->withInput()->with('error', 'Gia sư đã có lịch dạy vào thời gian này. Vui lòng chọn thời gian khác.');
+        }
 
         // Lấy giá theo môn học
         $subject = $tutor->subjects()->findOrFail($validated['subject_id']);
         $pricePerHour = $subject->pivot->price_per_hour ?? $tutor->hourly_rate;
-        $totalAmount = $pricePerHour * $duration;
+        
+        // Tính thời lượng và tổng tiền
+        $durationHours = $startTime->diffInMinutes($endTime) / 60;
+        $totalAmount = $pricePerHour * $durationHours;
 
         // Tạo booking
-        $booking = new Booking([
-            'student_id' => Auth::id(),
-            'tutor_id' => $tutor->id,
-            'subject_id' => $validated['subject_id'],
-            'start_time' => $startTime,
-            'end_time' => $endTime,
-            'status' => 'pending',
-            'notes' => $validated['notes'],
-            'price_per_hour' => $pricePerHour,
-            'total_amount' => $totalAmount,
-        ]);
+        try {
+            DB::beginTransaction();
+            
+            $booking = new Booking([
+                'student_id' => Auth::id(),
+                'tutor_id' => $tutor->id,
+                'subject_id' => $validated['subject_id'],
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'status' => 'pending',
+                'notes' => $validated['notes'],
+                'price_per_hour' => $pricePerHour,
+                'total_amount' => $totalAmount,
+            ]);
 
-        $booking->save();
+            $booking->save();
+            
+            DB::commit();
+            
+            // Chuyển hướng đến trang thanh toán
+            return redirect()->route('payment.create', ['booking' => $booking])
+                ->with('success', 'Yêu cầu đặt lịch đã được tạo. Vui lòng hoàn tất thanh toán.');
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Lỗi khi tạo booking', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->withInput()->with('error', 'Có lỗi xảy ra khi đặt lịch. Vui lòng thử lại sau.');
+        }
+    }
 
-        // Chuyển hướng đến trang thanh toán
-        return redirect()->route('payment.create', ['booking' => $booking])
-            ->with('success', 'Yêu cầu đặt lịch đã được tạo. Vui lòng hoàn tất thanh toán.');
+    /**
+     * Kiểm tra xem thời gian có nằm trong lịch rảnh của gia sư hay không
+     */
+    private function isWithinTutorAvailability($tutor, $startTime, $endTime)
+    {
+        $date = $startTime->toDateString();
+        $dayOfWeek = $startTime->dayOfWeek;
+        
+        // Lấy giờ và phút để so sánh
+        $startTimeFormatted = $startTime->format('H:i');
+        $endTimeFormatted = $endTime->format('H:i');
+        
+        // Kiểm tra lịch rảnh cụ thể theo ngày trước
+        $dateSpecificAvailability = $tutor->availabilities()
+            ->where('date', $date)
+            ->where('status', 'active')
+            ->get();
+            
+        // Kiểm tra từng khung giờ rảnh cụ thể theo ngày
+        foreach ($dateSpecificAvailability as $availability) {
+            $availStartTime = $availability->start_time->format('H:i');
+            $availEndTime = $availability->end_time->format('H:i');
+            
+            // Nếu khung giờ đặt lịch nằm hoàn toàn trong khung giờ rảnh của gia sư
+            if ($startTimeFormatted >= $availStartTime && $endTimeFormatted <= $availEndTime) {
+                // Kiểm tra xem lịch rảnh này có trùng với booking nào khác không
+                if (!$this->hasBookingConflict($tutor, $startTime, $endTime)) {
+                    return true;
+                }
+            }
+        }
+        
+        // Nếu không có lịch rảnh cụ thể theo ngày, kiểm tra lịch rảnh lặp lại hàng tuần
+        if ($dateSpecificAvailability->isEmpty()) {
+            $weeklyAvailabilities = $tutor->availabilities()
+                ->where('day_of_week', $dayOfWeek)
+                ->where('is_recurring', true)
+                ->where('status', 'active')
+                ->whereNull('date')
+                ->get();
+                
+            foreach ($weeklyAvailabilities as $availability) {
+                $availStartTime = $availability->start_time->format('H:i');
+                $availEndTime = $availability->end_time->format('H:i');
+                
+                // Nếu khung giờ đặt lịch nằm hoàn toàn trong khung giờ rảnh của gia sư
+                if ($startTimeFormatted >= $availStartTime && $endTimeFormatted <= $availEndTime) {
+                    // Kiểm tra xem lịch rảnh này có trùng với booking nào khác không
+                    if (!$this->hasBookingConflict($tutor, $startTime, $endTime)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Kiểm tra xem có bị trùng với lịch dạy khác không
+     */
+    private function hasBookingConflict($tutor, $startTime, $endTime)
+    {
+        return Booking::where('tutor_id', $tutor->id)
+            ->whereIn('status', ['confirmed', 'scheduled', 'pending'])
+            ->where(function($query) use ($startTime, $endTime) {
+                $query->whereBetween('start_time', [$startTime, $endTime])
+                    ->orWhereBetween('end_time', [$startTime, $endTime])
+                    ->orWhere(function($q) use ($startTime, $endTime) {
+                        $q->where('start_time', '<=', $startTime)
+                          ->where('end_time', '>=', $endTime);
+                    });
+            })
+            ->exists();
     }
 
     public function show(Booking $booking)

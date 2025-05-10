@@ -23,16 +23,22 @@ class Booking extends Model
         'completion_notes',
         'cancelled_reason',
         'cancelled_by',
-        'refund_percentage'
+        'refund_percentage',
+        'reschedule_requested',
+        'rescheduled_at',
+        'rescheduled_reason',
+        'admin_notes'
     ];
 
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
         'completed_at' => 'datetime',
+        'rescheduled_at' => 'datetime',
         'price_per_hour' => 'decimal:2',
         'total_amount' => 'decimal:2',
-        'refund_percentage' => 'integer'
+        'refund_percentage' => 'integer',
+        'reschedule_requested' => 'boolean'
     ];
 
     public function student()
@@ -56,5 +62,35 @@ class Booking extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Lấy các yêu cầu đổi lịch của buổi học
+     */
+    public function rescheduleRequests()
+    {
+        return $this->hasMany(BookingRescheduleRequest::class);
+    }
+    
+    /**
+     * Lấy yêu cầu đổi lịch mới nhất
+     */
+    public function latestRescheduleRequest()
+    {
+        return $this->rescheduleRequests()->latest()->first();
+    }
+    
+    /**
+     * Kiểm tra xem có yêu cầu đổi lịch đang chờ không
+     */
+    public function hasPendingRescheduleRequest()
+    {
+        // Kiểm tra cả trường cơ bản và database
+        if ($this->reschedule_requested) {
+            return true;
+        }
+        
+        // Kiểm tra trong database xem có yêu cầu đổi lịch nào đang pending không
+        return $this->rescheduleRequests()->where('status', 'pending')->exists();
     }
 } 

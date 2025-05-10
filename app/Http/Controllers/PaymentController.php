@@ -114,6 +114,11 @@ class PaymentController extends Controller
         } catch (\Exception $e) {
             // Lưu thông báo lỗi vào session và ghi log
             Log::error('Payment callback error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => $request->all()
+            ]);
+            
             // Lưu thông báo lỗi vào session
             session()->flash('error', 'Có lỗi xảy ra khi xử lý thanh toán: ' . $e->getMessage());
             

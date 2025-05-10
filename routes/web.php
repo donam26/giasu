@@ -73,10 +73,25 @@ Route::middleware('auth')->group(function () {
         Route::post('/bookings/{tutor}', [StudentBookingController::class, 'store'])->name('bookings.store');
         Route::get('/bookings/{booking}', [StudentBookingController::class, 'show'])->name('bookings.show');
         Route::post('/bookings/{booking}/cancel', [StudentBookingController::class, 'cancel'])->name('bookings.cancel');
+        Route::patch('/bookings/{booking}/cancel', [StudentBookingController::class, 'cancel']);
+        
+        // Quản lý lịch rảnh học sinh
+        Route::get('/availability', [App\Http\Controllers\Student\AvailabilityController::class, 'index'])->name('availability.index');
+        Route::get('/availability/create', [App\Http\Controllers\Student\AvailabilityController::class, 'create'])->name('availability.create');
+        Route::post('/availability', [App\Http\Controllers\Student\AvailabilityController::class, 'store'])->name('availability.store');
+        Route::get('/availability/{id}/edit', [App\Http\Controllers\Student\AvailabilityController::class, 'edit'])->name('availability.edit');
+        Route::put('/availability/{id}', [App\Http\Controllers\Student\AvailabilityController::class, 'update'])->name('availability.update');
+        Route::delete('/availability/{id}', [App\Http\Controllers\Student\AvailabilityController::class, 'destroy'])->name('availability.destroy');
+        Route::post('/availability/quick-store', [App\Http\Controllers\Student\AvailabilityController::class, 'quickStore'])->name('availability.quick-store');
         
         // Review routes
         Route::get('/tutors/{tutor}/review', [ReviewController::class, 'create'])->name('tutors.review');
         Route::post('/tutors/{tutor}/review', [ReviewController::class, 'store'])->name('tutors.review.store');
+
+        // Reschedule routes
+        Route::get('/reschedules', [App\Http\Controllers\Student\RescheduleController::class, 'index'])->name('reschedules.index');
+        Route::get('/reschedules/{rescheduleRequest}', [App\Http\Controllers\Student\RescheduleController::class, 'show'])->name('reschedules.show');
+        Route::post('/reschedules/{rescheduleRequest}/respond', [App\Http\Controllers\Student\RescheduleController::class, 'respond'])->name('reschedules.respond');
     });
 
     // Tutor Routes
@@ -98,7 +113,23 @@ Route::middleware('auth')->group(function () {
         Route::put('/schedule/{availability}', [App\Http\Controllers\Tutor\AvailabilityController::class, 'update'])->name('schedule.update');
         Route::delete('/schedule/{availability}', [App\Http\Controllers\Tutor\AvailabilityController::class, 'destroy'])->name('schedule.destroy');
         
+        // Lịch rảnh - Sử dụng route resource cho AvailabilityController mới
+        Route::get('/availability', [App\Http\Controllers\Tutor\AvailabilityController::class, 'index'])->name('availability.index');
+        Route::get('/availability/create', [App\Http\Controllers\Tutor\AvailabilityController::class, 'create'])->name('availability.create');
+        Route::post('/availability', [App\Http\Controllers\Tutor\AvailabilityController::class, 'store'])->name('availability.store');
+        Route::get('/availability/{id}/edit', [App\Http\Controllers\Tutor\AvailabilityController::class, 'edit'])->name('availability.edit');
+        Route::put('/availability/{id}', [App\Http\Controllers\Tutor\AvailabilityController::class, 'update'])->name('availability.update');
+        Route::delete('/availability/{id}', [App\Http\Controllers\Tutor\AvailabilityController::class, 'destroy'])->name('availability.destroy');
+        Route::get('/availability/quick', [App\Http\Controllers\Tutor\AvailabilityController::class, 'quickCreate'])->name('availability.quick');
+        Route::post('/availability/quick-store', [App\Http\Controllers\Tutor\AvailabilityController::class, 'quickStore'])->name('availability.quick-store');
+        
         Route::get('/earnings', [TutorEarningController::class, 'index'])->name('earnings.index');
+
+        // Reschedule routes
+        Route::get('/bookings/{booking}/reschedule', [App\Http\Controllers\Tutor\RescheduleController::class, 'requestForm'])->name('bookings.reschedule');
+        Route::post('/bookings/{booking}/reschedule', [App\Http\Controllers\Tutor\RescheduleController::class, 'store'])->name('bookings.reschedule.store');
+        Route::get('/reschedules/{rescheduleRequest}', [App\Http\Controllers\Tutor\RescheduleController::class, 'show'])->name('reschedules.show');
+        Route::post('/reschedules/{rescheduleRequest}/cancel', [App\Http\Controllers\Tutor\RescheduleController::class, 'cancel'])->name('reschedules.cancel');
     });
 });
 

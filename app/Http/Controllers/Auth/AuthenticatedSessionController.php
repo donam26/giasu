@@ -46,6 +46,17 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended($redirectUrl);
         }
 
+        // Chuyển hướng dựa vào vai trò của người dùng
+        $user = Auth::user();
+        
+        if ($user->is_admin) {
+            return redirect()->route('admin.dashboard');
+        } elseif ($user->tutor && $user->tutor->status === 'active') {
+            return redirect()->route('tutor.dashboard');
+        } elseif ($user->tutor && $user->tutor->status !== 'active') {
+            return redirect()->route('tutors.pending', $user->tutor);
+        }
+
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 

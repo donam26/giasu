@@ -18,26 +18,36 @@ class BookingController extends Controller
 
     public function show(Booking $booking)
     {
-        $booking->load(['student', 'tutor.user', 'subject']);
+        $booking->load(['student', 'tutor.user', 'subject', 'payments']);
         return view('admin.bookings.show', compact('booking'));
     }
 
     public function edit(Booking $booking)
     {
+        $booking->load(['student', 'tutor.user', 'subject']);
         return view('admin.bookings.edit', compact('booking'));
     }
 
     public function update(Request $request, Booking $booking)
     {
-        $request->validate([
+        $validated = $request->validate([
             'status' => ['required', 'in:pending,confirmed,completed,cancelled'],
             'admin_notes' => ['nullable', 'string'],
         ]);
 
-        $booking->update([
-            'status' => $request->status,
-            'admin_notes' => $request->admin_notes,
-        ]);
+        // Nếu status thay đổi, lưu thêm thông tin liên quan
+        if ($booking->status != $validated['status']) {
+            if ($validated['status'] == 'completed') {
+                $validated['completed_at'] = now();
+            } elseif ($validated['status'] == 'cancelled') {
+                if (empty($booking->cancelled_reason)) {
+                    $validated['cancelled_reason'] = 'Hủy bởi quản trị viên';
+                    $validated['cancelled_by'] = 'admin';
+                }
+            }
+        }
+
+        $booking->update($validated);
 
         return redirect()->route('admin.bookings.index')
             ->with('success', 'Trạng thái đặt lịch đã được cập nhật.');
