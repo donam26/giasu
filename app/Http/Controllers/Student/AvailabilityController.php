@@ -347,6 +347,17 @@ class AvailabilityController extends Controller
             'date' => 'nullable|date',
             'status' => 'nullable|in:active,inactive',
             'is_recurring' => 'nullable|boolean',
+        ], [
+            'days.required' => 'Vui lòng chọn ít nhất một ngày',
+            'days.array' => 'Danh sách ngày không hợp lệ',
+            'days.*.required' => 'Ngày không được bỏ trống',
+            'days.*.integer' => 'Ngày phải là số nguyên',
+            'days.*.between' => 'Ngày phải có giá trị từ 0 đến 6',
+            'timeSlots.required' => 'Vui lòng chọn ít nhất một khung giờ',
+            'timeSlots.array' => 'Danh sách khung giờ không hợp lệ',
+            'timeSlots.*.required' => 'Khung giờ không được bỏ trống',
+            'date.date' => 'Ngày không hợp lệ',
+            'status.in' => 'Trạng thái không hợp lệ',
         ]);
 
         try {

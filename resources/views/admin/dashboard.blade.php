@@ -67,6 +67,69 @@
     </div>
 </div>
 
+<!-- Thống kê doanh thu và thanh toán -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 mt-8">
+    <!-- Tổng doanh thu -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-blue-600 bg-opacity-75">
+                <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="mb-2 text-sm font-medium text-gray-600">Tổng Doanh Thu</p>
+                <p class="text-lg font-semibold text-gray-700">{{ number_format($platformStats['total_earnings'], 0, ',', '.') }}đ</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phí nền tảng -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-purple-600 bg-opacity-75">
+                <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="mb-2 text-sm font-medium text-gray-600">Phí Nền Tảng</p>
+                <p class="text-lg font-semibold text-gray-700">{{ number_format($platformStats['total_platform_fee'], 0, ',', '.') }}đ</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Đang chờ thanh toán -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-yellow-600 bg-opacity-75">
+                <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="mb-2 text-sm font-medium text-gray-600">Chờ Thanh Toán</p>
+                <p class="text-lg font-semibold text-gray-700">{{ number_format($platformStats['pending_payments'], 0, ',', '.') }}đ</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Đã thanh toán -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="p-3 rounded-full bg-green-600 bg-opacity-75">
+                <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="mb-2 text-sm font-medium text-gray-600">Đã Thanh Toán</p>
+                <p class="text-lg font-semibold text-gray-700">{{ number_format($platformStats['completed_payments'], 0, ',', '.') }}đ</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Đặt lịch hôm nay -->
 <div class="bg-white rounded-lg shadow mb-8">
     <div class="px-6 py-4 border-b border-gray-200">
@@ -118,6 +181,56 @@
                 <tr>
                     <td colspan="5" class="px-6 py-4 text-center text-gray-500">
                         Không có đặt lịch nào hôm nay
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Khoản thanh toán đang chờ xử lý -->
+<div class="bg-white rounded-lg shadow mb-8">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <h2 class="text-lg font-medium text-gray-900">Thanh Toán Gia Sư Chờ Xử Lý</h2>
+        <a href="{{ route('admin.earnings.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Xem tất cả</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gia Sư</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Buổi Học</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Tiền</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày Tạo</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @forelse($pendingEarnings as $earning)
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{{ $earning->id }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ $earning->tutor->user->name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {{ $earning->booking->subject->name }} <br>
+                        <span class="text-xs text-gray-500">{{ $earning->booking->start_time->format('d/m/Y H:i') }}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ number_format($earning->amount, 0, ',', '.') }}đ
+                        <div class="text-xs text-gray-500">Phí: {{ number_format($earning->platform_fee, 0, ',', '.') }}đ</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ $earning->created_at->format('d/m/Y') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="{{ route('admin.earnings.edit', $earning) }}" class="text-indigo-600 hover:text-indigo-900">Xử lý</a>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                        Không có khoản thanh toán nào đang chờ xử lý
                     </td>
                 </tr>
                 @endforelse

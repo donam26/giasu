@@ -28,6 +28,13 @@ class SubjectController extends Controller
             'description' => ['required', 'string'],
             'category' => ['required', 'string', 'max:255'],
             'is_active' => ['boolean'],
+        ], [
+            'name.required' => 'Tên môn học không được bỏ trống',
+            'name.max' => 'Tên môn học không được vượt quá 255 ký tự',
+            'name.unique' => 'Tên môn học này đã tồn tại',
+            'description.required' => 'Mô tả không được bỏ trống',
+            'category.required' => 'Danh mục không được bỏ trống',
+            'category.max' => 'Danh mục không được vượt quá 255 ký tự',
         ]);
 
         Subject::create([
@@ -59,6 +66,13 @@ class SubjectController extends Controller
             'description' => ['required', 'string'],
             'category' => ['required', 'string', 'max:255'],
             'is_active' => ['boolean'],
+        ], [
+            'name.required' => 'Tên môn học không được bỏ trống',
+            'name.max' => 'Tên môn học không được vượt quá 255 ký tự',
+            'name.unique' => 'Tên môn học này đã tồn tại',
+            'description.required' => 'Mô tả không được bỏ trống',
+            'category.required' => 'Danh mục không được bỏ trống',
+            'category.max' => 'Danh mục không được vượt quá 255 ký tự',
         ]);
 
         $subject->update([

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Tutor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
@@ -12,8 +13,17 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::latest()->paginate(10);
-        return view('admin.users.index', compact('users'));
+        // Lấy tất cả người dùng và thông tin gia sư (nếu có)
+        $users = User::with('tutor')
+            ->latest()
+            ->paginate(15);
+            
+        // Đếm số lượng người dùng và gia sư
+        $userCount = User::count();
+        $tutorCount = Tutor::count();
+        $normalUserCount = $userCount - $tutorCount;
+        
+        return view('admin.users.index', compact('users', 'userCount', 'tutorCount', 'normalUserCount'));
     }
 
     public function create()
@@ -28,6 +38,15 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'is_admin' => ['boolean'],
+        ], [
+            'name.required' => 'Tên không được bỏ trống',
+            'name.max' => 'Tên không được vượt quá 255 ký tự',
+            'email.required' => 'Email không được bỏ trống',
+            'email.email' => 'Email không đúng định dạng',
+            'email.max' => 'Email không được vượt quá 255 ký tự',
+            'email.unique' => 'Email này đã được sử dụng',
+            'password.required' => 'Mật khẩu không được bỏ trống',
+            'password.confirmed' => 'Xác nhận mật khẩu không khớp',
         ]);
 
         $user = User::create([
@@ -43,6 +62,8 @@ class UserController extends Controller
 
     public function show(User $user)
     {
+        // Tải thêm thông tin gia sư nếu người dùng này là gia sư
+        $user->load('tutor');
         return view('admin.users.show', compact('user'));
     }
 
@@ -58,6 +79,14 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
             'is_admin' => ['boolean'],
+        ], [
+            'name.required' => 'Tên không được bỏ trống',
+            'name.max' => 'Tên không được vượt quá 255 ký tự',
+            'email.required' => 'Email không được bỏ trống',
+            'email.email' => 'Email không đúng định dạng',
+            'email.max' => 'Email không được vượt quá 255 ký tự',
+            'email.unique' => 'Email này đã được sử dụng',
+            'password.confirmed' => 'Xác nhận mật khẩu không khớp',
         ]);
 
         $user->update([

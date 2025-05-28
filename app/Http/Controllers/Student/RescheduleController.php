@@ -67,6 +67,12 @@ class RescheduleController extends Controller
             'response' => 'required|in:accept,reject',
             'option_id' => 'required_if:response,accept|nullable|exists:booking_reschedule_options,id',
             'response_note' => 'nullable|string|max:500',
+        ], [
+            'response.required' => 'Vui lòng chọn phản hồi',
+            'response.in' => 'Phản hồi không hợp lệ',
+            'option_id.required_if' => 'Vui lòng chọn một tùy chọn thời gian',
+            'option_id.exists' => 'Tùy chọn thời gian không hợp lệ',
+            'response_note.max' => 'Ghi chú phản hồi không được vượt quá 500 ký tự',
         ]);
         
         if ($validated['response'] === 'accept') {

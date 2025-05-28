@@ -37,11 +37,22 @@
                 <div class="ml-6">
                     <h3 class="text-2xl font-bold text-gray-900">{{ $user->name }}</h3>
                     <p class="text-sm text-gray-500">{{ $user->email }}</p>
-                    @if($user->is_admin)
-                    <span class="mt-2 inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                        Admin
-                    </span>
-                    @endif
+                    <div class="flex mt-2 space-x-2">
+                        @if($user->is_admin)
+                        <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            Admin
+                        </span>
+                        @endif
+                        @if($user->tutor)
+                        <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            Gia Sư
+                        </span>
+                        @else
+                        <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            Học Sinh
+                        </span>
+                        @endif
+                    </div>
                 </div>
             </div>
 
@@ -66,6 +77,46 @@
                             <a href="{{ route('admin.tutors.show', $user->tutor) }}" class="text-indigo-600 hover:text-indigo-900">
                                 Xem thông tin gia sư
                             </a>
+                        </dd>
+                    </div>
+
+                    <!-- Thông tin gia sư -->
+                    <div class="bg-blue-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 mt-4 rounded-lg">
+                        <dt class="text-sm font-medium text-blue-800 col-span-3 mb-2">Thông Tin Gia Sư</dt>
+                        
+                        <dt class="text-sm font-medium text-gray-500">Trình Độ Học Vấn</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $user->tutor->education_level }}</dd>
+                        
+                        <dt class="text-sm font-medium text-gray-500">Trường Đại Học</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $user->tutor->university }}</dd>
+                        
+                        <dt class="text-sm font-medium text-gray-500">Chuyên Ngành</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $user->tutor->major }}</dd>
+                        
+                        <dt class="text-sm font-medium text-gray-500">Kinh Nghiệm Giảng Dạy</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $user->tutor->teaching_experience }}</dd>
+                        
+                        <dt class="text-sm font-medium text-gray-500">Giá Theo Giờ</dt>
+                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ number_format($user->tutor->hourly_rate, 0, ',', '.') }}đ</dd>
+                        
+                        <dt class="text-sm font-medium text-gray-500">Trạng Thái</dt>
+                        <dd class="mt-1 text-sm sm:mt-0 sm:col-span-2">
+                            @switch($user->tutor->status)
+                                @case('active')
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Hoạt Động
+                                    </span>
+                                    @break
+                                @case('inactive')
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Ngừng Hoạt Động
+                                    </span>
+                                    @break
+                                @default
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        Chờ Duyệt
+                                    </span>
+                            @endswitch
                         </dd>
                     </div>
                     @endif

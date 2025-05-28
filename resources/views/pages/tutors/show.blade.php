@@ -149,15 +149,12 @@
                 </a>
                 
                 <a href="#lich-day" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                    Lịch dạy & Khu vực
+                    Lịch dạy 
                 </a>
-                
-                <a href="#chung-chi" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                    Chứng chỉ & Thành tích
-                </a>
+             
                 
                 <a href="#danh-gia" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                    Đánh giá ({{ $tutor->reviews_count }})
+                    Đánh giá
                 </a>
                
             </nav>
@@ -174,11 +171,7 @@
     </div>
     
     <div id="lich-day" class="mt-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <x-tutors.availability :tutor="$tutor" :schedules="$tutor->schedules" />
-    </div>
-    
-    <div id="chung-chi" class="mt-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <x-tutors.achievements :tutor="$tutor" :certificates="$tutor->certificates" />
+        <x-tutors.availability :tutor="$tutor" :schedules="$schedules" :availabilities="$availabilities" />
     </div>
     
     <!-- Phần đánh giá -->
@@ -186,7 +179,7 @@
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xl font-bold text-gray-900">Đánh giá từ học sinh ({{ $tutor->reviews_count }})</h3>
+                    <h3 class="text-xl font-bold text-gray-900">Đánh giá từ học sinh</h3>
                     
                     @auth
                         @if(auth()->user()->hasCompletedBookingWith($tutor->id) && !auth()->user()->hasReviewedTutor($tutor->id))

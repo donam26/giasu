@@ -42,10 +42,11 @@
 
     <div class="bg-white overflow-hidden shadow rounded-lg">
         <div class="p-6">
-            <!-- Tabs cho từng ngày -->
-            <div x-data="{ activeTab: null, setActiveTab(tab) { this.activeTab = tab; } }" class="space-y-8">
+            <!-- Tabs cho từng ngày - Sử dụng JavaScript thuần thay vì Alpine.js -->
+            <div class="booking-tabs space-y-8">
+                <!-- Tab navigation -->
                 <div class="border-b border-gray-200">
-                    <div class="flex overflow-x-auto pb-1 hide-scrollbar">
+                    <div class="flex overflow-x-auto pb-1 hide-scrollbar" id="tab-buttons-container">
                         @forelse($availabilitiesByDate as $date => $availabilities)
                             @php
                                 $dateObj = \Carbon\Carbon::parse($date);
@@ -55,10 +56,9 @@
                             @endphp
                             <button 
                                 type="button"
-                                @click="setActiveTab('{{ $date }}')"
-                                x-init="$nextTick(() => { if (activeTab === null) { setActiveTab('{{ $date }}') } })"
-                                :class="{ 'text-indigo-600 border-indigo-600': activeTab === '{{ $date }}', 'text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent': activeTab !== '{{ $date }}' }"
-                                class="py-2 px-4 text-sm font-medium border-b-2 whitespace-nowrap focus:outline-none"
+                                class="tab-button py-2 px-4 text-sm font-medium border-b-2 whitespace-nowrap focus:outline-none text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent"
+                                data-date="{{ $date }}"
+                                onclick="bookingTabSystem.activateTab('{{ $date }}');"
                             >
                                 {{ $dayName }} {{ $formattedDate }}
                                 @if($isToday) <span class="ml-1 text-xs text-indigo-600">(Hôm nay)</span> @endif
@@ -71,10 +71,10 @@
                     </div>
                 </div>
 
-                <!-- Nội dung tabs -->
+                <!-- Tab content -->
                 @foreach($availabilitiesByDate as $date => $availabilities)
-                    <div x-show="activeTab === '{{ $date }}'" class="space-y-6">
-                        <form action="{{ route('student.bookings.store', $tutor) }}" method="POST" class="bg-white" id="bookingForm">
+                    <div class="tab-content space-y-6" data-date="{{ $date }}" style="display: none;">
+                        <form action="{{ route('student.bookings.store', $tutor) }}" method="POST" class="bg-white" id="bookingForm_{{ $date }}">
                             @csrf
                             
                             <input type="hidden" name="selected_date" value="{{ $date }}">
@@ -92,36 +92,45 @@
                                             </span>
                                         </label>
                                         <div class="grid grid-cols-1 gap-3">
-                                            @foreach($availabilities as $availability)
-                                                <div class="relative">
-                                                    <input type="radio" id="time_slot_{{ $date }}_{{ $loop->index }}" 
-                                                        name="time_slot" 
-                                                        value="{{ \Carbon\Carbon::parse($availability['start_time'])->format('H:i') }}_{{ \Carbon\Carbon::parse($availability['end_time'])->format('H:i') }}" 
-                                                        class="sr-only peer"
-                                                        required>
-                                                    <label for="time_slot_{{ $date }}_{{ $loop->index }}" 
-                                                        class="flex items-center justify-between p-4 text-gray-700 bg-white border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-indigo-600 peer-checked:bg-indigo-50 hover:bg-gray-50 transition-all duration-200">
-                                                        <div>
-                                                            <span class="text-base font-medium peer-checked:text-indigo-600">{{ \Carbon\Carbon::parse($availability['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($availability['end_time'])->format('H:i') }}</span>
-                                                        </div>
-                                                        <div class="text-sm text-gray-500 peer-checked:text-indigo-500">
-                                                            @php
-                                                                $startTime = \Carbon\Carbon::parse($availability['start_time'])->format('H:i');
-                                                                $endTime = \Carbon\Carbon::parse($availability['end_time'])->format('H:i');
-                                                                $startDateTime = \Carbon\Carbon::createFromFormat('H:i', $startTime);
-                                                                $endDateTime = \Carbon\Carbon::createFromFormat('H:i', $endTime);
-                                                                $duration = $startDateTime->diffInHours($endDateTime) . ' giờ';
-                                                            @endphp
-                                                            <span class="flex items-center">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                </svg>
-                                                                {{ $duration }}
-                                                            </span>
-                                                        </div>
-                                                    </label>
+                                            @if(count($availabilities) > 0)
+                                                @foreach($availabilities as $index => $availability)
+                                                    <div class="relative">
+                                                        <input type="radio" id="time_slot_{{ $date }}_{{ $index }}" 
+                                                            name="time_slot" 
+                                                            value="{{ \Carbon\Carbon::parse($availability['start_time'])->format('H:i') }}_{{ \Carbon\Carbon::parse($availability['end_time'])->format('H:i') }}" 
+                                                            class="sr-only peer time-slot-radio"
+                                                            data-start="{{ \Carbon\Carbon::parse($availability['start_time'])->format('H:i') }}"
+                                                            data-end="{{ \Carbon\Carbon::parse($availability['end_time'])->format('H:i') }}"
+                                                            onclick="bookingTabSystem.onTimeSlotSelect(this);"
+                                                            required>
+                                                        <label for="time_slot_{{ $date }}_{{ $index }}" 
+                                                            class="flex items-center justify-between p-4 text-gray-700 bg-white border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-indigo-600 peer-checked:bg-indigo-50 hover:bg-gray-50 transition-all duration-200">
+                                                            <div>
+                                                                <span class="text-base font-medium peer-checked:text-indigo-600">{{ \Carbon\Carbon::parse($availability['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($availability['end_time'])->format('H:i') }}</span>
+                                                            </div>
+                                                            <div class="text-sm text-gray-500 peer-checked:text-indigo-500">
+                                                                @php
+                                                                    $startTime = \Carbon\Carbon::parse($availability['start_time'])->format('H:i');
+                                                                    $endTime = \Carbon\Carbon::parse($availability['end_time'])->format('H:i');
+                                                                    $startDateTime = \Carbon\Carbon::createFromFormat('H:i', $startTime);
+                                                                    $endDateTime = \Carbon\Carbon::createFromFormat('H:i', $endTime);
+                                                                    $duration = $startDateTime->diffInHours($endDateTime) . ' giờ';
+                                                                @endphp
+                                                                <span class="flex items-center">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                    {{ $duration }}
+                                                                </span>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                @endforeach
+                                            @else
+                                                <div class="p-4 rounded-md bg-gray-50 text-gray-600 text-center">
+                                                    Không có khung giờ rảnh nào trong ngày này.
                                                 </div>
-                                            @endforeach
+                                            @endif
                                         </div>
                                         @error('time_slot')
                                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -140,7 +149,7 @@
                                                 Chọn môn học (Bước 2)
                                             </span>
                                         </label>
-                                        <select id="subject_id" name="subject_id" class="mt-1 block w-full pl-3 pr-10 py-3 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" required>
+                                        <select id="subject_id" name="subject_id" class="mt-1 block w-full pl-3 pr-10 py-3 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" onchange="bookingTabSystem.calculatePrice();" required>
                                             <option value="">Chọn môn học</option>
                                             @foreach($tutor->subjects as $subject)
                                                 <option value="{{ $subject->id }}" data-price="{{ $subject->pivot->price_per_hour ?? $tutor->hourly_rate }}">
@@ -222,38 +231,134 @@
 
 @push('scripts')
 <script>
-    function updateTotalAmount() {
-        const subjectSelect = document.getElementById('subject_id');
-        const selectedTimeSlot = document.querySelector('input[name="time_slot"]:checked');
-        const totalAmountSpan = document.getElementById('total_amount');
-        const hourDetailSpan = document.getElementById('hour_detail');
-        const submitButton = document.getElementById('bookingSubmitBtn');
+    // Hệ thống quản lý tab đặt lịch và tính giá tiền - sử dụng JavaScript thuần, không dùng Alpine.js
+    const bookingTabSystem = {
+        // Biến lưu trạng thái hiện tại
+        activeTab: null,          // Tab đang active
+        selectedTimeSlot: null,   // Khung giờ đã chọn
+        selectedSubject: null,    // Môn học đã chọn
         
-        if (!subjectSelect || !totalAmountSpan || !hourDetailSpan) return;
-        
-        // Kiểm tra cả ô giờ và môn học đã được chọn chưa
-        const isTimeSelected = selectedTimeSlot !== null;
-        const isSubjectSelected = subjectSelect.value !== '';
-        
-        // Chỉ cho phép nhấn nút đặt lịch khi đã chọn đủ thông tin
-        if (submitButton) {
-            submitButton.disabled = !(isTimeSelected && isSubjectSelected);
+        // Kích hoạt tab
+        activateTab: function(tabDate) {
+            console.clear();
+            console.log('Kích hoạt tab:', tabDate);
             
-            if (isTimeSelected && isSubjectSelected) {
-                submitButton.classList.remove('bg-indigo-400');
-                submitButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+            // Cập nhật trạng thái tab active
+            this.activeTab = tabDate;
+            
+            // 1. Cập nhật giao diện tab buttons (loại bỏ active state của tất cả tab)
+            const allTabButtons = document.querySelectorAll('.tab-button');
+            allTabButtons.forEach(btn => {
+                if (btn.getAttribute('data-date') === tabDate) {
+                    btn.classList.add('text-indigo-600', 'border-indigo-600');
+                    btn.classList.remove('text-gray-500', 'border-transparent');
+                } else {
+                    btn.classList.remove('text-indigo-600', 'border-indigo-600');
+                    btn.classList.add('text-gray-500', 'border-transparent');
+                }
+            });
+            
+            // 2. Hiển thị nội dung tab tương ứng
+            const allTabContents = document.querySelectorAll('.tab-content');
+            allTabContents.forEach(content => {
+                if (content.getAttribute('data-date') === tabDate) {
+                    content.style.display = 'block';
+                } else {
+                    content.style.display = 'none';
+                }
+            });
+            
+            // 3. Kiểm tra xem trong tab hiện tại đã có time slot nào được chọn chưa
+            this.checkSelectedTimeSlot();
+            
+            // 4. Tính lại giá tiền
+            this.calculatePrice();
+        },
+        
+        // Kiểm tra xem trong tab hiện tại đã có time slot nào được chọn chưa
+        checkSelectedTimeSlot: function() {
+            if (!this.activeTab) return;
+            
+            const activeTabContent = document.querySelector(`.tab-content[data-date="${this.activeTab}"]`);
+            if (!activeTabContent) return;
+            
+            const checkedTimeSlot = activeTabContent.querySelector('.time-slot-radio:checked');
+            if (checkedTimeSlot) {
+                this.selectedTimeSlot = {
+                    id: checkedTimeSlot.id,
+                    value: checkedTimeSlot.value,
+                    start: checkedTimeSlot.getAttribute('data-start'),
+                    end: checkedTimeSlot.getAttribute('data-end')
+                };
+                console.log('Đã tìm thấy khung giờ đã chọn trong tab hiện tại:', this.selectedTimeSlot);
             } else {
-                submitButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
-                submitButton.classList.add('bg-indigo-400');
+                this.selectedTimeSlot = null;
+                console.log('Không có khung giờ nào được chọn trong tab hiện tại');
             }
-        }
+        },
         
-        if (isTimeSelected && isSubjectSelected) {
-            const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
-            const pricePerHour = parseFloat(selectedOption.dataset.price);
-            const timeSlotParts = selectedTimeSlot.value.split('_');
+        // Sự kiện khi chọn khung giờ
+        onTimeSlotSelect: function(radioElement) {
+            this.selectedTimeSlot = {
+                id: radioElement.id,
+                value: radioElement.value,
+                start: radioElement.getAttribute('data-start'),
+                end: radioElement.getAttribute('data-end')
+            };
             
-            if (timeSlotParts.length === 2) {
+            console.log('Đã chọn khung giờ:', this.selectedTimeSlot);
+            this.calculatePrice();
+        },
+        
+        // Tính giá tiền dựa trên thông tin đã chọn
+        calculatePrice: function() {
+            console.log('Đang tính toán giá tiền...');
+            
+            const totalAmountElement = document.getElementById('total_amount');
+            const hourDetailElement = document.getElementById('hour_detail');
+            const submitButton = document.getElementById('bookingSubmitBtn');
+            
+            // Kiểm tra xem đã chọn đủ thông tin chưa
+            const subjectSelect = document.getElementById('subject_id');
+            if (!subjectSelect || subjectSelect.value === '') {
+                console.log('Chưa chọn môn học');
+                totalAmountElement.textContent = '0đ';
+                hourDetailElement.textContent = '';
+                submitButton.disabled = true;
+                submitButton.classList.add('bg-indigo-400');
+                submitButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                return;
+            }
+            
+            // Lưu thông tin môn học đã chọn
+            const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
+            this.selectedSubject = {
+                id: subjectSelect.value,
+                name: selectedOption.textContent.trim(),
+                price: parseFloat(selectedOption.getAttribute('data-price'))
+            };
+            
+            console.log('Đã chọn môn học:', this.selectedSubject);
+            
+            if (!this.selectedTimeSlot) {
+                console.log('Chưa chọn khung giờ');
+                totalAmountElement.textContent = '0đ';
+                hourDetailElement.textContent = '';
+                submitButton.disabled = true;
+                submitButton.classList.add('bg-indigo-400');
+                submitButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                return;
+            }
+            
+            // Đã chọn đủ thông tin, tính toán giá tiền
+            try {
+                console.log('Tính toán với:', {
+                    'Khung giờ': this.selectedTimeSlot.value,
+                    'Giá theo giờ': this.selectedSubject.price
+                });
+                
+                // Phân tích thời gian từ time slot
+                const timeSlotParts = this.selectedTimeSlot.value.split('_');
                 const startTime = timeSlotParts[0];
                 const endTime = timeSlotParts[1];
                 
@@ -261,54 +366,92 @@
                 const [startHour, startMinute] = startTime.split(':').map(Number);
                 const [endHour, endMinute] = endTime.split(':').map(Number);
                 
-                let duration = endHour - startHour;
-                if (endMinute < startMinute) {
-                    duration -= 0.5;
-                } else if (endMinute > startMinute) {
+                const startDate = new Date(2023, 0, 1, startHour, startMinute);
+                const endDate = new Date(2023, 0, 1, endHour, endMinute);
+                
+                // Tính số phút chênh lệch
+                const diffMinutes = (endDate - startDate) / (1000 * 60);
+                let duration = Math.floor(diffMinutes / 60);
+                if (diffMinutes % 60 >= 30) {
                     duration += 0.5;
                 }
                 
-                const total = pricePerHour * duration;
+                console.log('Số giờ:', duration);
                 
-                // Hiển thị chi tiết giờ
-                hourDetailSpan.textContent = `${duration} giờ x ${new Intl.NumberFormat('vi-VN').format(pricePerHour)}đ`;
+                // Tính tổng tiền
+                const total = this.selectedSubject.price * duration;
+                console.log('Tổng tiền:', total);
                 
-                // Sử dụng hàm định dạng tiền tệ VN
-                fetch(`/api/format-currency?amount=${total}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        totalAmountSpan.textContent = data.formatted;
-                    })
-                    .catch(() => {
-                        // Fallback nếu API không hoạt động
-                        totalAmountSpan.textContent = new Intl.NumberFormat('vi-VN', { 
-                            style: 'currency', 
-                            currency: 'VND' 
-                        }).format(total);
-                    });
+                // Hiển thị kết quả
+                hourDetailElement.textContent = `${duration} giờ x ${new Intl.NumberFormat('vi-VN').format(this.selectedSubject.price)}đ`;
+                totalAmountElement.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total).replace('₫', 'đ');
+                
+                // Kích hoạt nút đặt lịch
+                submitButton.disabled = false;
+                submitButton.classList.remove('bg-indigo-400');
+                submitButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+            } catch (error) {
+                console.error('Lỗi khi tính toán giá tiền:', error);
+                totalAmountElement.textContent = '0đ';
+                hourDetailElement.textContent = '';
+                submitButton.disabled = true;
             }
-        } else {
-            totalAmountSpan.textContent = '0đ';
-            hourDetailSpan.textContent = '';
+        },
+        
+        // Khởi tạo hệ thống
+        init: function() {
+            console.log('Khởi tạo hệ thống đặt lịch');
+            
+            // Tìm tab đầu tiên và kích hoạt
+            const firstTabButton = document.querySelector('.tab-button');
+            if (firstTabButton) {
+                const firstTabDate = firstTabButton.getAttribute('data-date');
+                if (firstTabDate) {
+                    this.activateTab(firstTabDate);
+                }
+            }
+            
+            console.log('Đã khởi tạo xong hệ thống đặt lịch');
         }
-    }
-
-    // Thêm event listener cho các phần tử
+    };
+    
+    // Chạy khi trang đã tải xong
     document.addEventListener('DOMContentLoaded', function() {
-        const subjectSelect = document.getElementById('subject_id');
-        if (subjectSelect) {
-            subjectSelect.addEventListener('change', updateTotalAmount);
-        }
-        
-        // Theo dõi sự thay đổi của radio buttons
-        const timeSlots = document.querySelectorAll('input[name="time_slot"]');
-        timeSlots.forEach(slot => {
-            slot.addEventListener('change', updateTotalAmount);
-        });
-        
-        // Gọi hàm lần đầu để thiết lập trạng thái ban đầu
-        updateTotalAmount();
+        console.log('Trang đã tải xong, khởi tạo hệ thống đặt lịch...');
+        bookingTabSystem.init();
     });
 </script>
+
+<style>
+    /* Hiệu ứng cho tab */
+    .tab-button {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    /* Thêm animation cho tab content */
+    .tab-content {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    /* Làm nổi bật nút tab active */
+    .tab-button.text-indigo-600 {
+        position: relative;
+    }
+    
+    .tab-button.text-indigo-600::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: #4f46e5;
+    }
+</style>
 @endpush
 @endsection 

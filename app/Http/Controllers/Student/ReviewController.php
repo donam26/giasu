@@ -49,6 +49,15 @@ class ReviewController extends Controller
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'required|string|max:500',
             'is_anonymous' => 'sometimes|boolean'
+        ], [
+            'booking_id.required' => 'Vui lòng chọn buổi học để đánh giá',
+            'booking_id.exists' => 'Buổi học đã chọn không hợp lệ',
+            'rating.required' => 'Vui lòng chọn số sao đánh giá',
+            'rating.integer' => 'Số sao đánh giá phải là số nguyên',
+            'rating.min' => 'Số sao đánh giá phải từ 1 đến 5',
+            'rating.max' => 'Số sao đánh giá phải từ 1 đến 5',
+            'comment.required' => 'Vui lòng nhập nội dung đánh giá',
+            'comment.max' => 'Nội dung đánh giá không được vượt quá 500 ký tự',
         ]);
         
         // Kiểm tra booking thuộc về học sinh này và gia sư này

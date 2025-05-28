@@ -22,16 +22,12 @@ class Tutor extends Model
         'hourly_rate',
         'is_verified',
         'status',
-        'teaching_locations',
-        'can_teach_online',
         'total_teaching_hours',
         'rating'
     ];
 
     protected $casts = [
-        'teaching_locations' => 'array',
         'is_verified' => 'boolean',
-        'can_teach_online' => 'boolean',
         'hourly_rate' => 'decimal:2',
         'rating' => 'decimal:2'
     ];
@@ -81,5 +77,13 @@ class Tutor extends Model
     public function availabilities()
     {
         return $this->hasMany(TutorAvailability::class);
+    }
+
+    /**
+     * Lấy thông tin thu nhập của gia sư
+     */
+    public function earnings()
+    {
+        return $this->hasMany(TutorEarning::class);
     }
 }

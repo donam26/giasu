@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Tutor;
 use App\Models\Subject;
 use App\Models\ClassLevel;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -17,6 +18,96 @@ class TutorController extends Controller
             ->latest()
             ->paginate(10);
         return view('admin.tutors.index', compact('tutors'));
+    }
+
+    /**
+     * Hiển thị form tạo mới gia sư
+     */
+    public function create()
+    {
+        $users = User::whereDoesntHave('tutor')->get();
+        $subjects = Subject::all();
+        $classLevels = ClassLevel::all();
+        return view('admin.tutors.create', compact('users', 'subjects', 'classLevels'));
+    }
+    
+    /**
+     * Lưu gia sư mới vào database
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'user_id' => ['required', 'exists:users,id', 'unique:tutors,user_id'],
+            'education_level' => ['required', 'string', 'max:255'],
+            'university' => ['required', 'string', 'max:255'],
+            'major' => ['required', 'string', 'max:255'],
+            'teaching_experience' => ['required', 'numeric', 'min:0'],
+            'bio' => ['required', 'string'],
+            'hourly_rate' => ['required', 'numeric', 'min:0'],
+            'subjects' => ['required', 'array', 'min:1'],
+            'subjects.*' => ['exists:subjects,id'],
+            'class_levels' => ['required', 'array', 'min:1'],
+            'class_levels.*' => ['exists:class_levels,id'],
+            'status' => ['required', 'in:pending,active,inactive'],
+        ], [
+            'user_id.required' => 'ID người dùng không được bỏ trống',
+            'user_id.exists' => 'Người dùng không tồn tại',
+            'user_id.unique' => 'Người dùng này đã là gia sư',
+            'education_level.required' => 'Trình độ học vấn không được bỏ trống',
+            'education_level.max' => 'Trình độ học vấn không được vượt quá 255 ký tự',
+            'university.required' => 'Trường đại học không được bỏ trống',
+            'university.max' => 'Tên trường đại học không được vượt quá 255 ký tự',
+            'major.required' => 'Chuyên ngành không được bỏ trống',
+            'major.max' => 'Chuyên ngành không được vượt quá 255 ký tự',
+            'teaching_experience.required' => 'Kinh nghiệm giảng dạy không được bỏ trống',
+            'teaching_experience.numeric' => 'Kinh nghiệm giảng dạy phải là một số',
+            'teaching_experience.min' => 'Kinh nghiệm giảng dạy phải lớn hơn hoặc bằng 0',
+            'bio.required' => 'Giới thiệu bản thân không được bỏ trống',
+            'hourly_rate.required' => 'Giá theo giờ không được bỏ trống',
+            'hourly_rate.numeric' => 'Giá theo giờ phải là một số',
+            'hourly_rate.min' => 'Giá theo giờ phải lớn hơn hoặc bằng 0',
+            'subjects.required' => 'Bạn phải chọn ít nhất một môn học',
+            'subjects.min' => 'Bạn phải chọn ít nhất một môn học',
+            'subjects.*.exists' => 'Môn học đã chọn không hợp lệ',
+            'class_levels.required' => 'Bạn phải chọn ít nhất một cấp học',
+            'class_levels.min' => 'Bạn phải chọn ít nhất một cấp học',
+            'class_levels.*.exists' => 'Cấp học đã chọn không hợp lệ',
+            'status.required' => 'Trạng thái không được bỏ trống',
+            'status.in' => 'Trạng thái không hợp lệ',
+        ]);
+
+        try {
+            // Chuyển đổi teaching_experience thành text nếu cần
+            $teachingExperience = $request->teaching_experience . ' năm kinh nghiệm';
+            
+            $tutor = Tutor::create([
+                'user_id' => $request->user_id,
+                'education_level' => $request->education_level,
+                'university' => $request->university,
+                'major' => $request->major,
+                'teaching_experience' => $teachingExperience,
+                'bio' => $request->bio,
+                'hourly_rate' => $request->hourly_rate,
+                'status' => $request->status,
+                'is_verified' => $request->status === 'active',
+            ]);
+
+            // Cập nhật môn học
+            $tutor->subjects()->attach($request->subjects);
+
+            // Cập nhật cấp học
+            $tutor->classLevels()->attach($request->class_levels);
+
+            return redirect()->route('admin.tutors.index')
+                ->with('success', 'Gia sư mới đã được tạo thành công.');
+        } catch (\Exception $e) {
+            Log::error('Lỗi khi tạo gia sư mới:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function show(Tutor $tutor)
@@ -55,6 +146,27 @@ class TutorController extends Controller
             'class_levels.*' => ['exists:class_levels,id'],
             'status' => ['required', 'in:pending,active,inactive'],
             'is_verified' => ['boolean'],
+        ], [
+            'education_level.required' => 'Trình độ học vấn không được bỏ trống',
+            'education_level.max' => 'Trình độ học vấn không được vượt quá 255 ký tự',
+            'university.required' => 'Trường đại học không được bỏ trống',
+            'university.max' => 'Tên trường đại học không được vượt quá 255 ký tự',
+            'major.required' => 'Chuyên ngành không được bỏ trống',
+            'major.max' => 'Chuyên ngành không được vượt quá 255 ký tự',
+            'teaching_experience.required' => 'Kinh nghiệm giảng dạy không được bỏ trống',
+            'bio.required' => 'Giới thiệu bản thân không được bỏ trống',
+            'hourly_rate.required' => 'Giá theo giờ không được bỏ trống',
+            'hourly_rate.numeric' => 'Giá theo giờ phải là một số',
+            'hourly_rate.min' => 'Giá theo giờ phải lớn hơn hoặc bằng 0',
+            'subjects.required' => 'Bạn phải chọn ít nhất một môn học',
+            'subjects.min' => 'Bạn phải chọn ít nhất một môn học',
+            'subjects.*.exists' => 'Môn học đã chọn không hợp lệ',
+            'class_levels.required' => 'Bạn phải chọn ít nhất một cấp học',
+            'class_levels.min' => 'Bạn phải chọn ít nhất một cấp học',
+            'class_levels.*.exists' => 'Cấp học đã chọn không hợp lệ',
+            'status.required' => 'Trạng thái không được bỏ trống',
+            'status.in' => 'Trạng thái không hợp lệ',
+            'is_verified.boolean' => 'Trạng thái xác minh không hợp lệ',
         ]);
 
         try {

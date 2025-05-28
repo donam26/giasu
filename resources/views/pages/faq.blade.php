@@ -50,7 +50,7 @@
                                     <div class="rounded-lg bg-gray-50 p-5">
                                         <h3 class="text-lg font-medium text-gray-900 mb-2">Làm thế nào để tìm gia sư phù hợp?</h3>
                                         <div class="text-gray-600">
-                                            <p>Bạn có thể sử dụng công cụ tìm kiếm của chúng tôi để lọc gia sư theo môn học, cấp học, giá cả, khu vực dạy, và các tiêu chí khác. Mỗi gia sư đều có hồ sơ chi tiết bao gồm kinh nghiệm, trình độ học vấn, và đánh giá từ học sinh trước đó để giúp bạn đưa ra quyết định.</p>
+                                            <p>Bạn có thể sử dụng công cụ tìm kiếm của chúng tôi để lọc gia sư theo môn học, cấp học, giá cả, và các tiêu chí khác. Mỗi gia sư đều có hồ sơ chi tiết bao gồm kinh nghiệm, trình độ học vấn, và đánh giá từ học sinh trước đó để giúp bạn đưa ra quyết định.</p>
                                         </div>
                                     </div>
                                     
@@ -113,7 +113,7 @@
                                     <div class="rounded-lg bg-gray-50 p-5">
                                         <h3 class="text-lg font-medium text-gray-900 mb-2">Tôi có thể tự đặt giá dạy của mình không?</h3>
                                         <div class="text-gray-600">
-                                            <p>Có, bạn có toàn quyền quyết định mức học phí của mình. Chúng tôi cung cấp thông tin về mức giá trung bình theo môn học và khu vực để giúp bạn đặt giá hợp lý và cạnh tranh. Lưu ý rằng chúng tôi sẽ thu một khoản phí nhỏ từ mỗi buổi dạy thành công để duy trì nền tảng.</p>
+                                            <p>Có, bạn có toàn quyền quyết định mức học phí của mình. Chúng tôi cung cấp thông tin về mức giá trung bình theo môn học để giúp bạn đặt giá hợp lý và cạnh tranh. Lưu ý rằng chúng tôi sẽ thu một khoản phí nhỏ từ mỗi buổi dạy thành công để duy trì nền tảng.</p>
                                         </div>
                                     </div>
                                     

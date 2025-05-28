@@ -25,6 +25,14 @@ class DashboardController extends Controller
         $todayBookings = Booking::with(['student', 'tutor.user', 'subject'])
             ->whereDate('start_time', Carbon::today())
             ->get();
+            
+        // Thống kê doanh thu và thu nhập
+        $platformStats = [
+            'total_platform_fee' => \App\Models\TutorEarning::whereIn('status', ['completed', 'processing'])->sum('platform_fee'),
+            'pending_payments' => \App\Models\TutorEarning::where('status', 'pending')->sum('amount'),
+            'completed_payments' => \App\Models\TutorEarning::where('status', 'completed')->sum('amount'),
+            'total_earnings' => \App\Models\TutorEarning::sum('total_amount'),
+        ];
 
         // Thống kê đăng ký gia sư theo thời gian (7 ngày gần nhất)
         $tutorRegistrationData = Tutor::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as total'))
@@ -52,6 +60,13 @@ class DashboardController extends Controller
             'labels' => $bookingsBySubjectData->pluck('name'),
             'data' => $bookingsBySubjectData->pluck('total'),
         ];
+        
+        // Lấy các khoản thanh toán gia sư chờ xử lý
+        $pendingEarnings = \App\Models\TutorEarning::with(['tutor.user', 'booking.subject'])
+            ->where('status', 'pending')
+            ->latest()
+            ->take(5)
+            ->get();
 
         return view('admin.dashboard', compact(
             'totalUsers',
@@ -60,7 +75,9 @@ class DashboardController extends Controller
             'totalBookings',
             'todayBookings',
             'tutorRegistrationChart',
-            'bookingsBySubjectChart'
+            'bookingsBySubjectChart',
+            'platformStats',
+            'pendingEarnings'
         ));
     }
 } 

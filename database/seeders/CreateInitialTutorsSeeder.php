@@ -35,8 +35,6 @@ class CreateInitialTutorsSeeder extends Seeder
             'hourly_rate' => 200000,
             'is_verified' => true,
             'status' => 'active',
-            'can_teach_online' => true,
-            'teaching_locations' => ['Hà Nội', 'Online'],
             'total_teaching_hours' => 120,
             'rating' => 4.8,
         ]);
@@ -82,8 +80,6 @@ class CreateInitialTutorsSeeder extends Seeder
             'hourly_rate' => 180000,
             'is_verified' => true,
             'status' => 'active',
-            'can_teach_online' => true,
-            'teaching_locations' => ['Hà Nội', 'Online'],
             'total_teaching_hours' => 80,
             'rating' => 4.5,
         ]);

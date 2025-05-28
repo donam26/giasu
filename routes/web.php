@@ -54,6 +54,7 @@ Route::middleware('auth')->group(function () {
 
     // Payment routes
     Route::get('/payment/{booking}/create', [PaymentController::class, 'createPayment'])->name('payment.create');
+    Route::get('/payment/history', [PaymentController::class, 'history'])->name('payment.history');
 
     // Tutor Routes (yêu cầu đăng nhập)
     Route::post('/tutors', [TutorController::class, 'store'])->name('tutors.store');
@@ -74,6 +75,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/bookings/{booking}', [StudentBookingController::class, 'show'])->name('bookings.show');
         Route::post('/bookings/{booking}/cancel', [StudentBookingController::class, 'cancel'])->name('bookings.cancel');
         Route::patch('/bookings/{booking}/cancel', [StudentBookingController::class, 'cancel']);
+        Route::post('/bookings/{booking}/confirm-completion', [StudentBookingController::class, 'confirmCompletion'])->name('bookings.confirm-completion');
+        Route::post('/bookings/{booking}/rate', [StudentBookingController::class, 'rateBooking'])->name('bookings.rate');
         
         // Quản lý lịch rảnh học sinh
         Route::get('/availability', [App\Http\Controllers\Student\AvailabilityController::class, 'index'])->name('availability.index');
@@ -102,6 +105,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/bookings', [TutorBookingController::class, 'index'])->name('bookings.index');
         Route::get('/bookings/{booking}', [TutorBookingController::class, 'show'])->name('bookings.show');
         Route::patch('/bookings/{booking}/status', [TutorBookingController::class, 'updateStatus'])->name('bookings.update-status');
+        Route::post('/bookings/{booking}/start', [TutorBookingController::class, 'startClass'])->name('bookings.start');
+        Route::post('/bookings/{booking}/confirm-completion', [TutorBookingController::class, 'confirmCompletion'])->name('bookings.confirm-completion');
+        Route::post('/bookings/{booking}/report-issue', [TutorBookingController::class, 'reportIssue'])->name('bookings.report-issue');
         
         // Lịch rảnh - Sử dụng AvailabilityController
         Route::get('/schedule', [App\Http\Controllers\Tutor\AvailabilityController::class, 'index'])->name('schedule.index');
@@ -177,4 +183,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('tutors/{tutor}/approve', [AdminTutorController::class, 'approve'])->name('tutors.approve');
     Route::resource('subjects', AdminSubjectController::class);
     Route::resource('bookings', AdminBookingController::class);
+    
+    // Quản lý thu nhập và thanh toán cho gia sư
+    Route::get('earnings', [App\Http\Controllers\Admin\TutorEarningController::class, 'index'])->name('earnings.index');
+    Route::get('earnings/{earning}', [App\Http\Controllers\Admin\TutorEarningController::class, 'show'])->name('earnings.show');
+    Route::get('earnings/{earning}/edit', [App\Http\Controllers\Admin\TutorEarningController::class, 'edit'])->name('earnings.edit');
+    Route::patch('earnings/{earning}', [App\Http\Controllers\Admin\TutorEarningController::class, 'update'])->name('earnings.update');
+    Route::get('tutors/{tutor}/earnings', [App\Http\Controllers\Admin\TutorEarningController::class, 'tutorEarnings'])->name('tutors.earnings');
+    Route::post('earnings/process-completed', [App\Http\Controllers\Admin\TutorEarningController::class, 'processCompletedBookings'])->name('earnings.process-completed');
+    Route::post('earnings/mark-as-processing', [App\Http\Controllers\Admin\TutorEarningController::class, 'markAsProcessing'])->name('earnings.mark-as-processing');
+    Route::post('earnings/mark-as-completed', [App\Http\Controllers\Admin\TutorEarningController::class, 'markAsCompleted'])->name('earnings.mark-as-completed');
+
+    // Thêm routes cho admin xử lý thanh toán và hoàn tiền
+    Route::post('bookings/{booking}/confirm-payment', [AdminBookingController::class, 'confirmPayment'])->name('bookings.confirm-payment');
+    Route::post('bookings/{booking}/process-refund', [AdminBookingController::class, 'processRefund'])->name('bookings.process-refund');
 });

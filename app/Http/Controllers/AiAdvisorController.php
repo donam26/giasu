@@ -155,8 +155,6 @@ class AIAdvisorController extends Controller
                 1. Môn học bạn cần học
                 2. Cấp học/lớp của bạn
                 3. Mức học phí mong muốn
-                4. Bạn muốn học online hay offline
-                5. Nếu học offline, bạn ở khu vực nào
                 
                 Sau khi có đủ thông tin, tôi sẽ giúp bạn tìm gia sư phù hợp. Bạn có thể bấm nút \"Tổng kết\" để xem danh sách gia sư được đề xuất.";
                 
@@ -507,15 +505,6 @@ class AIAdvisorController extends Controller
         // Kinh nghiệm
         if ($tutor->experience_years > 0) {
             $reasons[] = "Có " . $tutor->experience_years . " năm kinh nghiệm giảng dạy";
-        }
-
-        // Phương pháp giảng dạy
-        if (isset($preferences['teaching_method'])) {
-            if ($tutor->teaching_method === 'both') {
-                $reasons[] = "Có thể dạy cả online và offline";
-            } else {
-                $reasons[] = "Dạy " . ($tutor->teaching_method === 'online' ? 'trực tuyến' : 'trực tiếp');
-            }
         }
 
         // Học phí

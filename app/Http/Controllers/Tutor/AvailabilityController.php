@@ -55,6 +55,15 @@ class AvailabilityController extends Controller
             'end_time' => 'required|after:start_time',
             'is_recurring' => 'nullable|boolean',
             'status' => 'nullable|in:active,inactive',
+        ], [
+            'day_of_week.required' => 'Ngày trong tuần không được bỏ trống',
+            'day_of_week.integer' => 'Ngày trong tuần phải là số nguyên',
+            'day_of_week.between' => 'Ngày trong tuần phải có giá trị từ 0 đến 6',
+            'date.date' => 'Ngày không hợp lệ',
+            'start_time.required' => 'Thời gian bắt đầu không được bỏ trống',
+            'end_time.required' => 'Thời gian kết thúc không được bỏ trống',
+            'end_time.after' => 'Thời gian kết thúc phải sau thời gian bắt đầu',
+            'status.in' => 'Trạng thái không hợp lệ',
         ]);
 
         try {
@@ -106,7 +115,7 @@ class AvailabilityController extends Controller
             $availability->date = $request->filled('date') ? $request->date : null;
             $availability->start_time = $startTime;
             $availability->end_time = $endTime;
-            $availability->is_recurring = $request->boolean('is_recurring');
+            $availability->is_recurring = 1;
             $availability->status = $request->input('status', 'active');
             
             if ($availability->save()) {
@@ -139,9 +148,6 @@ class AvailabilityController extends Controller
     {
         // Kiểm tra quyền truy cập
         $tutor = Auth::user()->tutor;
-        if ($availability->tutor_id !== $tutor->id) {
-            abort(403, 'Bạn không có quyền chỉnh sửa lịch rảnh này.');
-        }
         
         return view('tutor.availability.edit', [
             'availability' => $availability,
@@ -168,6 +174,15 @@ class AvailabilityController extends Controller
             'end_time' => 'required|after:start_time',
             'is_recurring' => 'nullable|boolean',
             'status' => 'nullable|in:active,inactive',
+        ], [
+            'day_of_week.required' => 'Ngày trong tuần không được bỏ trống',
+            'day_of_week.integer' => 'Ngày trong tuần phải là số nguyên',
+            'day_of_week.between' => 'Ngày trong tuần phải có giá trị từ 0 đến 6',
+            'date.date' => 'Ngày không hợp lệ',
+            'start_time.required' => 'Thời gian bắt đầu không được bỏ trống',
+            'end_time.required' => 'Thời gian kết thúc không được bỏ trống',
+            'end_time.after' => 'Thời gian kết thúc phải sau thời gian bắt đầu',
+            'status.in' => 'Trạng thái không hợp lệ',
         ]);
 
         try {
@@ -287,21 +302,21 @@ class AvailabilityController extends Controller
             
             // Kiểm tra xem lịch rảnh có đang được sử dụng không
             $hasBookings = Booking::where('tutor_id', $tutorId)
-                ->where('day_of_week', $availability->day_of_week)
-                ->where('status', '!=', 'cancelled')
-                ->where(function($query) use ($availability) {
-                    $query->whereBetween('start_time', [$availability->start_time, $availability->end_time])
-                        ->orWhereBetween('end_time', [$availability->start_time, $availability->end_time])
-                        ->orWhere(function($q) use ($availability) {
-                            $q->where('start_time', '<=', $availability->start_time)
-                              ->where('end_time', '>=', $availability->end_time);
-                        });
-                });
-            
+                ->where('status', '!=', 'cancelled');
+                
             // Nếu có ngày cụ thể, chỉ kiểm tra lịch học cho ngày đó
             if ($availability->date) {
                 $hasBookings->whereDate('start_time', $availability->date);
             }
+            
+            $hasBookings = $hasBookings->where(function($query) use ($availability) {
+                $query->whereBetween('start_time', [$availability->start_time, $availability->end_time])
+                    ->orWhereBetween('end_time', [$availability->start_time, $availability->end_time])
+                    ->orWhere(function($q) use ($availability) {
+                        $q->where('start_time', '<=', $availability->start_time)
+                          ->where('end_time', '>=', $availability->end_time);
+                    });
+            });
             
             if ($hasBookings->exists()) {
                 Log::warning('Không thể xóa lịch rảnh vì đang có lịch học', [

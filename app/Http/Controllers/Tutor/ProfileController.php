@@ -30,14 +30,27 @@ class ProfileController extends Controller
             'bio' => 'required|string',
             'avatar' => 'nullable|image|max:1024',
             'hourly_rate' => 'required|numeric|min:0',
-            'teaching_locations' => 'nullable|array',
-            'can_teach_online' => 'boolean',
             'subjects' => 'required|array|min:1',
             'subjects.*' => 'exists:subjects,id',
             'subject_prices' => 'nullable|array',
             'subject_prices.*' => 'nullable|array',
             'subject_prices.*.price' => 'nullable|numeric|min:0',
             'subject_prices.*.experience' => 'nullable|string',
+        ], [
+            'education_level.required' => 'Trình độ học vấn không được bỏ trống',
+            'education_level.max' => 'Trình độ học vấn không được vượt quá 255 ký tự',
+            'teaching_experience.required' => 'Kinh nghiệm giảng dạy không được bỏ trống',
+            'bio.required' => 'Giới thiệu bản thân không được bỏ trống',
+            'avatar.image' => 'Ảnh đại diện phải là một hình ảnh',
+            'avatar.max' => 'Ảnh đại diện không được vượt quá 1MB',
+            'hourly_rate.required' => 'Giá theo giờ không được bỏ trống',
+            'hourly_rate.numeric' => 'Giá theo giờ phải là một số',
+            'hourly_rate.min' => 'Giá theo giờ phải lớn hơn hoặc bằng 0',
+            'subjects.required' => 'Bạn phải chọn ít nhất một môn học',
+            'subjects.min' => 'Bạn phải chọn ít nhất một môn học',
+            'subjects.*.exists' => 'Môn học đã chọn không hợp lệ',
+            'subject_prices.*.price.numeric' => 'Giá theo giờ cho môn học phải là một số',
+            'subject_prices.*.price.min' => 'Giá theo giờ cho môn học phải lớn hơn hoặc bằng 0',
         ]);
 
         if ($request->hasFile('avatar')) {
@@ -52,8 +65,6 @@ class ProfileController extends Controller
             'teaching_experience' => $validated['teaching_experience'],
             'bio' => $validated['bio'],
             'hourly_rate' => $validated['hourly_rate'],
-            'teaching_locations' => $validated['teaching_locations'] ?? [],
-            'can_teach_online' => $request->has('can_teach_online'),
         ]);
 
         if ($request->hasFile('avatar')) {

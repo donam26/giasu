@@ -25,6 +25,15 @@ class ScheduleController extends Controller
             'day_of_week' => 'required|integer|between:0,6',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
+        ], [
+            'day_of_week.required' => 'Ngày trong tuần không được bỏ trống',
+            'day_of_week.integer' => 'Ngày trong tuần phải là số nguyên',
+            'day_of_week.between' => 'Ngày trong tuần phải có giá trị từ 0 đến 6',
+            'start_time.required' => 'Thời gian bắt đầu không được bỏ trống',
+            'start_time.date_format' => 'Thời gian bắt đầu phải có định dạng giờ:phút',
+            'end_time.required' => 'Thời gian kết thúc không được bỏ trống',
+            'end_time.date_format' => 'Thời gian kết thúc phải có định dạng giờ:phút',
+            'end_time.after' => 'Thời gian kết thúc phải sau thời gian bắt đầu',
         ]);
 
         $tutor = Auth::user()->tutor;

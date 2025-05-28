@@ -89,31 +89,6 @@
                                 <input type="number" name="hourly_rate" id="hourly_rate" min="0" step="1000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             </div>
 
-                            <!-- Khu vực dạy -->
-                            <div>
-                                <label for="teaching_locations" class="block text-sm font-medium text-gray-700">
-                                    Khu vực dạy
-                                </label>
-                                <select id="teaching_locations" name="teaching_locations[]" multiple class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                    <option value="Quận 1">Quận 1</option>
-                                    <option value="Quận 2">Quận 2</option>
-                                    <option value="Quận 3">Quận 3</option>
-                                    <option value="Quận 4">Quận 4</option>
-                                    <option value="Quận 5">Quận 5</option>
-                                    <!-- Thêm các quận/huyện khác -->
-                                </select>
-                            </div>
-
-                            <!-- Dạy online -->
-                            <div class="flex items-start">
-                                <div class="flex items-center h-5">
-                                    <input id="can_teach_online" name="can_teach_online" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                </div>
-                                <div class="ml-3 text-sm">
-                                    <label for="can_teach_online" class="font-medium text-gray-700">Có thể dạy online</label>
-                                    <p class="text-gray-500">Tôi có thể dạy trực tuyến qua Zoom, Google Meet, etc.</p>
-                                </div>
-                            </div>
 
                             <!-- Môn học -->
                             <div class="sm:col-span-2">

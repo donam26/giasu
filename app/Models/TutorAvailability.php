@@ -64,8 +64,7 @@ class TutorAvailability extends Model
         $tutor = $this->tutor;
         
         $query = Booking::where('tutor_id', $tutor->id)
-            ->where('status', '!=', 'cancelled')
-            ->where('day_of_week', $this->day_of_week);
+            ->where('status', '!=', 'cancelled');
             
         // Nếu lịch rảnh có ngày cụ thể, chỉ kiểm tra lịch học cho ngày đó
         if ($this->date) {

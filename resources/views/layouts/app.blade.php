@@ -37,9 +37,22 @@
                         <a href="{{ route('subjects.index') }}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
                             Môn Học
                         </a>
+                        @php
+                            // Kiểm tra user có phải là gia sư hay không
+                            $isTutor = false;
+                            if (auth()->check()) {
+                                try {
+                                    $isTutor = auth()->user()->tutor()->exists();
+                                } catch(\Exception $e) {
+                                    // Không làm gì nếu có lỗi
+                                }
+                            }
+                        @endphp
+                        @if(!$isTutor)
                         <a href="{{ route('ai-advisor') }}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
                             Tư Vấn AI
                         </a>
+                        @endif
                     </div>
 
                     <!-- User Menu -->

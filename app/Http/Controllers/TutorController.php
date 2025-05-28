@@ -61,13 +61,6 @@ class TutorController extends Controller
             Log::info('TutorController@index - Số lượng sau khi lọc theo đánh giá: ' . $query->count());
         }
         
-        // Lọc theo dạy online
-        if ($request->online_only) {
-            $query->where('can_teach_online', true);
-            Log::info('TutorController@index - Lọc theo online_only');
-            Log::info('TutorController@index - Số lượng sau khi lọc theo dạy online: ' . $query->count());
-        }
-        
         // Chỉ lấy gia sư đã được kích hoạt và xác minh
         $query->where('status', '=', 'active')
               ->where('is_verified', true);
@@ -102,10 +95,26 @@ class TutorController extends Controller
         $reviews = $tutor->reviews()->with(['student', 'booking.subject'])->latest()->paginate(5);
         $reviewsCount = $tutor->reviews()->count();
         
+        // Lấy lịch dạy của gia sư
+        $schedules = $tutor->schedules()->get();
+        
+        // Lấy lịch rảnh của gia sư (cả lịch rảnh cụ thể và lịch lặp lại)
+        $availabilities = $tutor->availabilities()
+            ->where(function ($query) {
+                $query->where('start_time', '>', now())
+                    ->orWhere('is_recurring', true);
+            })
+            ->where('status', 'active')
+            ->orderBy('day_of_week')
+            ->orderBy('start_time')
+            ->get();
+        
         return view('pages.tutors.show', [
             'tutor' => $tutor->load(['subjects', 'classLevels']),
             'reviews' => $reviews,
-            'reviews_count' => $reviewsCount
+            'reviews_count' => $reviewsCount,
+            'schedules' => $schedules,
+            'availabilities' => $availabilities
         ]);
     }
 
@@ -151,8 +160,6 @@ class TutorController extends Controller
             'certification_files' => 'nullable|array',
             'certification_files.*' => 'file|mimes:pdf,jpg,jpeg,png|max:2048',
             'hourly_rate' => 'required|numeric|min:0',
-            'teaching_locations' => 'nullable|array',
-            'can_teach_online' => 'boolean',
             'subjects' => 'required|array|min:1',
             'subjects.*' => 'exists:subjects,id',
             'class_levels' => 'required|array|min:1',
@@ -161,6 +168,27 @@ class TutorController extends Controller
             'subject_prices.*' => 'nullable|array',
             'subject_prices.*.price' => 'nullable|numeric|min:0',
             'subject_prices.*.experience' => 'nullable|string',
+        ], [
+            'education_level.required' => 'Trình độ học vấn không được bỏ trống',
+            'education_level.max' => 'Trình độ học vấn không được vượt quá 255 ký tự',
+            'teaching_experience.required' => 'Kinh nghiệm giảng dạy không được bỏ trống',
+            'bio.required' => 'Giới thiệu bản thân không được bỏ trống',
+            'avatar.image' => 'Ảnh đại diện phải là một hình ảnh',
+            'avatar.max' => 'Ảnh đại diện không được vượt quá 1MB',
+            'certification_files.*.file' => 'Chứng chỉ phải là một tệp tin',
+            'certification_files.*.mimes' => 'Chứng chỉ phải có định dạng: pdf, jpg, jpeg, png',
+            'certification_files.*.max' => 'Chứng chỉ không được vượt quá 2MB',
+            'hourly_rate.required' => 'Giá theo giờ không được bỏ trống',
+            'hourly_rate.numeric' => 'Giá theo giờ phải là một số',
+            'hourly_rate.min' => 'Giá theo giờ phải lớn hơn hoặc bằng 0',
+            'subjects.required' => 'Bạn phải chọn ít nhất một môn học',
+            'subjects.min' => 'Bạn phải chọn ít nhất một môn học',
+            'subjects.*.exists' => 'Môn học đã chọn không hợp lệ',
+            'class_levels.required' => 'Bạn phải chọn ít nhất một cấp học',
+            'class_levels.min' => 'Bạn phải chọn ít nhất một cấp học',
+            'class_levels.*.exists' => 'Cấp học đã chọn không hợp lệ',
+            'subject_prices.*.price.numeric' => 'Giá theo giờ cho môn học phải là một số',
+            'subject_prices.*.price.min' => 'Giá theo giờ cho môn học phải lớn hơn hoặc bằng 0',
         ]);
 
         try {
@@ -250,8 +278,6 @@ class TutorController extends Controller
             'certification_files' => 'nullable|array',
             'certification_files.*' => 'file|mimes:pdf,jpg,jpeg,png|max:2048',
             'hourly_rate' => 'required|numeric|min:0',
-            'teaching_locations' => 'nullable|array',
-            'can_teach_online' => 'boolean',
             'subjects' => 'required|array|min:1',
             'subjects.*' => 'exists:subjects,id',
             'class_levels' => 'required|array|min:1',
@@ -260,6 +286,27 @@ class TutorController extends Controller
             'subject_prices.*' => 'nullable|array',
             'subject_prices.*.price' => 'nullable|numeric|min:0',
             'subject_prices.*.experience' => 'nullable|string',
+        ], [
+            'education_level.required' => 'Trình độ học vấn không được bỏ trống',
+            'education_level.max' => 'Trình độ học vấn không được vượt quá 255 ký tự',
+            'teaching_experience.required' => 'Kinh nghiệm giảng dạy không được bỏ trống',
+            'bio.required' => 'Giới thiệu bản thân không được bỏ trống',
+            'avatar.image' => 'Ảnh đại diện phải là một hình ảnh',
+            'avatar.max' => 'Ảnh đại diện không được vượt quá 1MB',
+            'certification_files.*.file' => 'Chứng chỉ phải là một tệp tin',
+            'certification_files.*.mimes' => 'Chứng chỉ phải có định dạng: pdf, jpg, jpeg, png',
+            'certification_files.*.max' => 'Chứng chỉ không được vượt quá 2MB',
+            'hourly_rate.required' => 'Giá theo giờ không được bỏ trống',
+            'hourly_rate.numeric' => 'Giá theo giờ phải là một số',
+            'hourly_rate.min' => 'Giá theo giờ phải lớn hơn hoặc bằng 0',
+            'subjects.required' => 'Bạn phải chọn ít nhất một môn học',
+            'subjects.min' => 'Bạn phải chọn ít nhất một môn học',
+            'subjects.*.exists' => 'Môn học đã chọn không hợp lệ',
+            'class_levels.required' => 'Bạn phải chọn ít nhất một cấp học',
+            'class_levels.min' => 'Bạn phải chọn ít nhất một cấp học',
+            'class_levels.*.exists' => 'Cấp học đã chọn không hợp lệ',
+            'subject_prices.*.price.numeric' => 'Giá theo giờ cho môn học phải là một số',
+            'subject_prices.*.price.min' => 'Giá theo giờ cho môn học phải lớn hơn hoặc bằng 0',
         ]);
 
         if ($request->hasFile('avatar')) {

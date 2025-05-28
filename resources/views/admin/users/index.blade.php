@@ -3,6 +3,26 @@
 @section('page_title', 'Quản Lý Người Dùng')
 
 @section('content')
+<div class="bg-white shadow rounded-lg mb-6">
+    <div class="p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Thống Kê</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-blue-50 rounded-lg p-4">
+                <div class="text-blue-800 text-xl font-bold">{{ $userCount }}</div>
+                <div class="text-blue-600">Tổng người dùng</div>
+            </div>
+            <div class="bg-green-50 rounded-lg p-4">
+                <div class="text-green-800 text-xl font-bold">{{ $tutorCount }}</div>
+                <div class="text-green-600">Gia sư</div>
+            </div>
+            <div class="bg-purple-50 rounded-lg p-4">
+                <div class="text-purple-800 text-xl font-bold">{{ $normalUserCount }}</div>
+                <div class="text-purple-600">Học sinh</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="bg-white shadow rounded-lg">
     <div class="p-6 flex justify-between items-center">
         <h2 class="text-xl font-semibold text-gray-900">Danh Sách Người Dùng</h2>
@@ -19,6 +39,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vai Trò</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thông Tin</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày Tạo</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Thao Tác</th>
                 </tr>
@@ -43,10 +64,22 @@
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                             Admin
                         </span>
+                        @elseif($user->tutor)
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            Gia Sư
+                        </span>
                         @else
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                            Người Dùng
+                            Học Sinh
                         </span>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        @if($user->tutor)
+                            <div>{{ $user->tutor->education_level }}</div>
+                            <div>{{ $user->tutor->teaching_experience }}</div>
+                        @else
+                            <div>-</div>
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -59,6 +92,11 @@
                         <a href="{{ route('admin.users.edit', $user) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">
                             Sửa
                         </a>
+                        @if($user->tutor)
+                            <a href="{{ route('admin.tutors.edit', $user->tutor) }}" class="text-blue-600 hover:text-blue-900 mr-3">
+                                Sửa GS
+                            </a>
+                        @endif
                         @if($user->id !== auth()->id())
                         <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline-block">
                             @csrf
@@ -72,7 +110,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">
                         Không có người dùng nào
                     </td>
                 </tr>

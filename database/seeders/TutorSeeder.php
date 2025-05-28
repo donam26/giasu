@@ -29,8 +29,6 @@ class TutorSeeder extends Seeder
                 'hourly_rate' => rand(150000, 300000),
                 'is_verified' => true,
                 'status' => 'active',
-                'can_teach_online' => true,
-                'teaching_locations' => ['Hà Nội', 'Online'],
             ]);
         }
 

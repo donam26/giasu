@@ -91,6 +91,21 @@ class RescheduleController extends Controller
                 'reschedule_options.*.start_time' => 'required|date_format:H:i',
                 'reschedule_options.*.end_time' => 'required|date_format:H:i|after:reschedule_options.*.start_time',
                 'notes' => 'nullable|string|max:500',
+            ], [
+                'reason.required' => 'Lý do đổi lịch không được bỏ trống',
+                'reason.max' => 'Lý do đổi lịch không được vượt quá 500 ký tự',
+                'reschedule_options.required' => 'Phải có ít nhất một tùy chọn thời gian mới',
+                'reschedule_options.min' => 'Phải có ít nhất một tùy chọn thời gian mới',
+                'reschedule_options.max' => 'Không được vượt quá 5 tùy chọn thời gian',
+                'reschedule_options.*.date.required' => 'Ngày học không được bỏ trống',
+                'reschedule_options.*.date.date' => 'Ngày học không hợp lệ',
+                'reschedule_options.*.date.after' => 'Ngày học phải sau ngày hôm nay',
+                'reschedule_options.*.start_time.required' => 'Thời gian bắt đầu không được bỏ trống',
+                'reschedule_options.*.start_time.date_format' => 'Thời gian bắt đầu phải có định dạng giờ:phút',
+                'reschedule_options.*.end_time.required' => 'Thời gian kết thúc không được bỏ trống',
+                'reschedule_options.*.end_time.date_format' => 'Thời gian kết thúc phải có định dạng giờ:phút',
+                'reschedule_options.*.end_time.after' => 'Thời gian kết thúc phải sau thời gian bắt đầu',
+                'notes.max' => 'Ghi chú không được vượt quá 500 ký tự',
             ]);
         } catch (ValidationException $e) {
             \Illuminate\Support\Facades\Log::error('Validation error in reschedule request', [
