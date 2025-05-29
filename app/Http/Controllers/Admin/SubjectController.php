@@ -8,11 +8,17 @@ use Illuminate\Http\Request;
 
 class SubjectController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $subjects = Subject::withCount(['tutors', 'bookings'])
-            ->latest()
-            ->paginate(10);
+        $query = Subject::query()->withCount(['tutors', 'bookings']);
+        
+        // Tìm kiếm theo tên môn học
+        if ($request->has('search') && !empty($request->search)) {
+            $query->where('name', 'LIKE', '%' . $request->search . '%');
+        }
+        
+        $subjects = $query->latest()->paginate(10);
+        
         return view('admin.subjects.index', compact('subjects'));
     }
 

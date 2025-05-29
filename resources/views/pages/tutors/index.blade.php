@@ -23,19 +23,6 @@
                     <h2 class="text-xl font-semibold text-gray-900 mb-6">Bộ Lọc Tìm Kiếm</h2>
                     <form action="{{ route('tutors.index') }}" method="GET" class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- Subject Filter -->
-                            <div class="space-y-2">
-                                <label for="subject_id" class="block text-sm font-medium text-gray-700">Môn Học</label>
-                                <select id="subject_id" name="subject_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md shadow-sm">
-                                    <option value="">Tất cả môn học</option>
-                                    @foreach($subjects as $subject)
-                                        <option value="{{ $subject->id }}" {{ request('subject_id') == $subject->id ? 'selected' : '' }}>
-                                            {{ $subject->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
                             <!-- Class Level Filter -->
                             <div class="space-y-2">
                                 <label for="class_level_id" class="block text-sm font-medium text-gray-700">Cấp Học</label>

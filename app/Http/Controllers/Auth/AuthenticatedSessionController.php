@@ -51,10 +51,12 @@ class AuthenticatedSessionController extends Controller
         
         if ($user->is_admin) {
             return redirect()->route('admin.dashboard');
-        } elseif ($user->tutor && $user->tutor->status === 'active') {
+        } elseif ($user->isTutor() && $user->tutor->status === 'active') {
             return redirect()->route('tutor.dashboard');
-        } elseif ($user->tutor && $user->tutor->status !== 'active') {
+        } elseif ($user->isTutor() && $user->tutor->status !== 'active') {
             return redirect()->route('tutors.pending', $user->tutor);
+        } elseif ($user->isStudent()) {
+            return redirect()->route('student.bookings.index');
         }
 
         return redirect()->intended(RouteServiceProvider::HOME);

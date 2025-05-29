@@ -63,12 +63,8 @@
                     <div class="sm:col-span-4">
                         <div class="flex items-start">
                             <div class="flex items-center h-5">
-                                <input id="is_active" name="is_active" type="checkbox" value="1" {{ old('is_active', true) ? 'checked' : '' }}
+                                <input hidden id="is_active" name="is_active" type="checkbox" value="1" {{ old('is_active', true) ? 'checked' : '' }}
                                     class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                            </div>
-                            <div class="ml-3 text-sm">
-                                <label for="is_active" class="font-medium text-gray-700">Kích hoạt</label>
-                                <p class="text-gray-500">Môn học sẽ được hiển thị trên trang chủ</p>
                             </div>
                         </div>
                     </div>

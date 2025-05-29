@@ -31,6 +31,36 @@
         </a>
     </div>
 
+    <div class="px-6 pb-4">
+        <form action="{{ route('admin.users.index') }}" method="GET" class="flex items-center space-x-4">
+            <div class="flex-1">
+                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Tìm kiếm theo tên hoặc email</label>
+                <div class="relative rounded-md shadow-sm">
+                    <input type="text" name="search" id="search" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-3 pr-12 sm:text-sm border-gray-300 rounded-md" placeholder="Nhập tên hoặc email..." value="{{ request('search') }}">
+                    <div class="absolute inset-y-0 right-0 flex items-center">
+                        <button type="submit" class="h-full px-3 py-0 border-transparent bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none">
+                            Tìm
+                        </button>
+                    </div>
+                </div>
+            </div>
+            @if(request('search'))
+            <div>
+                <a href="{{ route('admin.users.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Xóa tìm kiếm
+                </a>
+            </div>
+            @endif
+        </form>
+        
+        @if(request('search'))
+        <div class="mt-2 text-sm text-gray-500">
+            Kết quả tìm kiếm cho: <span class="font-medium text-indigo-600">{{ request('search') }}</span>
+            <span class="ml-2">({{ $users->total() }} kết quả)</span>
+        </div>
+        @endif
+    </div>
+
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -89,12 +119,13 @@
                         <a href="{{ route('admin.users.show', $user) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
                             Chi Tiết
                         </a>
-                        <a href="{{ route('admin.users.edit', $user) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">
-                            Sửa
-                        </a>
                         @if($user->tutor)
                             <a href="{{ route('admin.tutors.edit', $user->tutor) }}" class="text-blue-600 hover:text-blue-900 mr-3">
                                 Sửa GS
+                            </a>
+                        @else
+                            <a href="{{ route('admin.users.edit', $user) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">
+                                Sửa TK
                             </a>
                         @endif
                         @if($user->id !== auth()->id())
@@ -120,7 +151,7 @@
     </div>
 
     <div class="px-6 py-4">
-        {{ $users->links() }}
+        {{ $users->appends(request()->query())->links() }}
     </div>
 </div>
 @endsection 

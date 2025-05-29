@@ -11,12 +11,22 @@ use Illuminate\Validation\Rules;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Lấy tất cả người dùng và thông tin gia sư (nếu có)
-        $users = User::with('tutor')
-            ->latest()
-            ->paginate(15);
+        // Khởi tạo query
+        $query = User::with('tutor');
+        
+        // Tìm kiếm theo tên hoặc email
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', '%' . $search . '%')
+                  ->orWhere('email', 'LIKE', '%' . $search . '%');
+            });
+        }
+        
+        // Lấy danh sách người dùng
+        $users = $query->latest()->paginate(15);
             
         // Đếm số lượng người dùng và gia sư
         $userCount = User::count();

@@ -12,11 +12,20 @@ use Illuminate\Support\Facades\Log;
 
 class TutorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tutors = Tutor::with(['user', 'subjects', 'classLevels'])
-            ->latest()
-            ->paginate(10);
+        $query = Tutor::with(['user', 'subjects', 'classLevels']);
+        
+        // Tìm kiếm theo tên gia sư
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'LIKE', '%' . $search . '%')
+                  ->orWhere('email', 'LIKE', '%' . $search . '%');
+            });
+        }
+        
+        $tutors = $query->latest()->paginate(10);
         return view('admin.tutors.index', compact('tutors'));
     }
 

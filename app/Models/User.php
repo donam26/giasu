@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Booking;
 use App\Models\Tutor;
 use App\Models\Review;
+use App\Models\Student;
 
 class User extends Authenticatable
 {
@@ -79,6 +80,27 @@ class User extends Authenticatable
     public function tutor()
     {
         return $this->hasOne(Tutor::class);
+    }
+    
+    /**
+     * Lấy thông tin học sinh của user (nếu là học sinh)
+     */
+    public function student()
+    {
+        return $this->hasOne(Student::class);
+    }
+    
+    /**
+     * Kiểm tra user có phải là học sinh không
+     */
+    public function isStudent()
+    {
+        try {
+            return $this->student()->exists();
+        } catch (\Exception $e) {
+            Log::error('Error in isStudent method: ' . $e->getMessage());
+            return false;
+        }
     }
     
     /**

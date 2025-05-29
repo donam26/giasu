@@ -74,18 +74,7 @@
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
-                
-                <div class="sm:col-span-6">
-                    <div class="flex items-start mt-2">
-                        <div class="flex items-center h-5">
-                            <input id="is_recurring" name="is_recurring" type="checkbox" value="1" {{ old('is_recurring', $availability->is_recurring) ? 'checked' : '' }} class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                        </div>
-                        <div class="ml-3 text-sm">
-                            <label for="is_recurring" class="font-medium text-gray-700">Lặp lại hàng tuần</label>
-                            <p class="text-gray-500">Chọn tùy chọn này nếu bạn muốn khung giờ này lặp lại vào cùng một ngày mỗi tuần.</p>
-                        </div>
-                    </div>
-                </div>
+              
 
                 <div class="sm:col-span-6">
                     <label for="status" class="block text-sm font-medium text-gray-700">Trạng thái</label>

@@ -35,12 +35,7 @@
                     </svg>
                     Danh sách
                 </button>
-                <button id="tab-calendar" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center transition-all duration-300" onclick="switchTab('calendar', 'list')">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Lịch tuần
-                </button>
+               
             </nav>
         </div>
 
@@ -148,12 +143,7 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <a href="{{ route('tutor.availability.edit', $availability->id) }}" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded-md inline-flex items-center mr-2 transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                            </svg>
-                                            Sửa
-                                        </a>
+                                       
                                         <form action="{{ route('tutor.availability.destroy', $availability->id) }}" method="POST" class="inline-block">
                                             @csrf
                                             @method('DELETE')
@@ -173,106 +163,6 @@
             @endif
         </div>
 
-        <!-- Lịch tuần -->
-        <div id="content-calendar" class="hidden p-6">
-            <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-                <div class="flex justify-between items-center px-4 py-2 bg-indigo-50">
-                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        Lịch tuần
-                    </h3>
-                    <span class="text-sm text-gray-600">Tuần hiện tại</span>
-                </div>
-                
-                <div class="grid grid-cols-7 gap-px border-b border-gray-200 bg-gray-100">
-                    @foreach($daysOfWeek as $index => $day)
-                        <div class="text-center py-3 {{ $index == date('w') ? 'bg-indigo-50 font-semibold text-indigo-600' : 'bg-white' }}">
-                            <div class="font-medium">{{ $day }}</div>
-                            <div class="text-xs text-gray-500 mt-1">
-                                @php
-                                    $date = now()->startOfWeek()->addDays($index);
-                                    echo $date->format('d/m');
-                                @endphp
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-
-                <div class="grid grid-cols-7 gap-px bg-gray-200">
-                    @foreach($daysOfWeek as $index => $day)
-                        <div class="bg-white p-2 min-h-[20rem] overflow-y-auto relative {{ $index == date('w') ? 'bg-indigo-50' : '' }}">
-                            @php
-                                $dayAvailabilities = $availabilities->where('day_of_week', $index);
-                            @endphp
-                            
-                            @if($dayAvailabilities->count() > 0)
-                                @foreach($dayAvailabilities as $availability)
-                                    <div class="mb-2 p-2 text-sm rounded-md cursor-pointer transition-all duration-300 hover:shadow-md {{ $availability->status == 'inactive' ? 'bg-red-100 border border-red-200 text-red-800' : 'bg-green-100 border border-green-200 text-green-800' }}"
-                                         onclick="window.location.href='{{ route('tutor.availability.edit', $availability->id) }}'">
-                                        <div class="flex items-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            {{ $availability->start_time->format('H:i') }} - {{ $availability->end_time->format('H:i') }}
-                                        </div>
-                                        <div class="text-xs mt-1 flex justify-between items-center">
-                                            <span>{{ round((strtotime($availability->end_time->format('H:i')) - strtotime($availability->start_time->format('H:i'))) / 3600, 1) }} giờ</span>
-                                            <span>
-                                                @if($availability->status == 'inactive')
-                                                    <span class="inline-flex items-center text-xs">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                        </svg>
-                                                        Bận
-                                                    </span>
-                                                @else
-                                                    <span class="inline-flex items-center text-xs">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                        Rảnh
-                                                    </span>
-                                                @endif
-                                            </span>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            @else
-                                <div class="h-full flex flex-col items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span class="text-gray-400 text-xs text-center">Chưa có<br>lịch rảnh</span>
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-                
-                <div class="p-4 bg-gray-50 border-t border-gray-200">
-                    <div class="flex items-center justify-between">
-                        <div class="flex space-x-4">
-                            <div class="flex items-center">
-                                <div class="w-3 h-3 bg-green-100 border border-green-200 rounded-full mr-1"></div>
-                                <span class="text-xs text-gray-600">Có thể dạy</span>
-                            </div>
-                            <div class="flex items-center">
-                                <div class="w-3 h-3 bg-red-100 border border-red-200 rounded-full mr-1"></div>
-                                <span class="text-xs text-gray-600">Không khả dụng</span>
-                            </div>
-                        </div>
-                        <a href="{{ route('tutor.availability.create') }}" class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            Thêm lịch rảnh mới
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>

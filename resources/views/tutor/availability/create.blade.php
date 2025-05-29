@@ -35,19 +35,6 @@
                         </dd>
                     </div>
 
-                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                        <dt class="text-sm font-medium text-gray-500">
-                            Ngày cụ thể (tùy chọn)
-                        </dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                            <input type="date" name="date" id="date" value="{{ old('date') }}"
-                                class="mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md">
-                            <p class="mt-1 text-xs text-gray-500">Để trống nếu lịch này lặp lại hàng tuần. Nếu chọn ngày cụ thể, lịch này sẽ chỉ hiển thị cho ngày đó.</p>
-                            @error('date')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </dd>
-                    </div>
 
                     <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                         <dt class="text-sm font-medium text-gray-500">
@@ -74,53 +61,7 @@
                             @enderror
                         </dd>
                     </div>
-
-                    <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                        <dt class="text-sm font-medium text-gray-500">
-                            Trạng thái
-                        </dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                            <div class="flex items-center space-x-4">
-                                <div class="flex items-center">
-                                    <input id="status-available" name="status" type="radio" value="active" {{ old('status', 'active') === 'active' ? 'checked' : '' }}
-                                        class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
-                                    <label for="status-available" class="ml-2 block text-sm text-gray-700">
-                                        Khả dụng (có thể dạy)
-                                    </label>
-                                </div>
-                                <div class="flex items-center">
-                                    <input id="status-unavailable" name="status" type="radio" value="inactive" {{ old('status') === 'inactive' ? 'checked' : '' }}
-                                        class="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300">
-                                    <label for="status-unavailable" class="ml-2 block text-sm text-gray-700">
-                                        Không khả dụng (không thể dạy)
-                                    </label>
-                                </div>
-                            </div>
-                            <p class="mt-1 text-xs text-gray-500">Chọn "Không khả dụng" nếu bạn muốn đánh dấu thời gian này là không thể dạy học.</p>
-                            @error('status')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </dd>
-                    </div>
-
-                    <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                        <dt class="text-sm font-medium text-gray-500">
-                            Lặp lại
-                        </dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                            <div class="flex items-center">
-                                <input id="is_recurring" name="is_recurring" type="checkbox" value="1" {{ old('is_recurring') ? 'checked' : '' }}
-                                    class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                                <label for="is_recurring" class="ml-2 block text-sm text-gray-700">
-                                    Lặp lại hàng tuần
-                                </label>
-                            </div>
-                            <p class="mt-1 text-xs text-gray-500">Lịch này sẽ được lặp lại hàng tuần. Nếu bạn đã chọn ngày cụ thể, tùy chọn này sẽ không có tác dụng.</p>
-                            @error('is_recurring')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </dd>
-                    </div>
+                    
 
                     @error('general')
                         <div class="bg-red-50 px-4 py-5 sm:px-6">
