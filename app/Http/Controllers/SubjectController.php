@@ -56,16 +56,16 @@ class SubjectController extends Controller
         $tutors = $subject->tutors()
                     ->where('status', 'active')
                     ->where('is_verified', true)
-                    ->when($request->has('min_price'), function($query) use ($request) {
+                    ->when($request->filled('min_price'), function($query) use ($request) {
                         $query->where('tutor_subjects.price_per_hour', '>=', $request->min_price);
                     })
-                    ->when($request->has('max_price'), function($query) use ($request) {
+                    ->when($request->filled('max_price'), function($query) use ($request) {
                         $query->where('tutor_subjects.price_per_hour', '<=', $request->max_price);
                     })
-                    ->when($request->has('min_rating'), function($query) use ($request) {
+                    ->when($request->filled('min_rating'), function($query) use ($request) {
                         $query->where('rating', '>=', $request->min_rating);
                     })
-                    ->when($request->has('sort') && $request->sort != '', function($query) use ($request) {
+                    ->when($request->filled('sort'), function($query) use ($request) {
                         if ($request->sort == 'price_asc') {
                             $query->orderBy('tutor_subjects.price_per_hour', 'asc');
                         } else if ($request->sort == 'price_desc') {
