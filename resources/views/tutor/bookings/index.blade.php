@@ -115,7 +115,7 @@
     
     <!-- Pending Completion Bookings -->
     <div class="px-4 py-5 sm:p-6 border-t border-gray-200">
-        <h4 class="text-md font-medium text-gray-800 mb-3">Lịch dạy chờ xác nhận hoàn thành</h4>
+        <h4 class="text-md font-medium text-gray-800 mb-3">Lịch dạy đã kết thúc cần xác nhận</h4>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -156,27 +156,20 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    @if($booking->status == 'pending_completion') bg-purple-100 text-purple-800
-                                    @else bg-orange-100 text-orange-800 @endif">
-                                    @if($booking->status == 'pending_completion') Chờ xác nhận hoàn thành
-                                    @else Cần xác nhận hoàn thành @endif
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
+                                    Đã kết thúc, cần xác nhận
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <a href="{{ route('tutor.bookings.show', $booking) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
                                     Chi tiết
                                 </a>
-                                @if(!$booking->tutor_confirmed)
-                                    <form action="{{ route('tutor.bookings.confirm-completion', $booking) }}" method="POST" class="inline">
-                                        @csrf
-                                        <button type="submit" class="text-green-600 hover:text-green-900 mr-3">
-                                            Xác nhận hoàn thành
-                                        </button>
-                                    </form>
-                                @else
-                                    <span class="text-gray-400">Đã xác nhận</span>
-                                @endif
+                                <form action="{{ route('tutor.bookings.confirm-completion', $booking) }}" method="POST" class="inline">
+                                    @csrf
+                                    <button type="submit" class="text-green-600 hover:text-green-900 mr-3">
+                                        Xác nhận hoàn thành
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     @empty

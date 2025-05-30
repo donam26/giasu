@@ -2,7 +2,102 @@
 
 @section('content')
 <div class="py-6">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        @if (session('success'))
+            <div class="p-4 bg-green-100 text-green-800 rounded-lg">
+                {{ session('success') }}
+            </div>
+        @endif
+        
+        @if (session('error'))
+            <div class="p-4 bg-red-100 text-red-800 rounded-lg">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        <!-- Thông tin tài khoản cá nhân -->
+        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="p-6 bg-white border-b border-gray-200">
+                <h2 class="text-xl font-semibold mb-4">{{ __('Thông tin tài khoản') }}</h2>
+                
+                <form method="POST" action="{{ route('tutor.profile.update-account') }}" class="mb-6">
+                    @csrf
+                    @method('PATCH')
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Họ tên -->
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700">{{ __('Họ và tên') }}</label>
+                            <input id="name" name="name" type="text" value="{{ old('name', Auth::user()->name) }}"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            @error('name')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        
+                        <!-- Email -->
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">{{ __('Email') }}</label>
+                            <input id="email" name="email" type="email" value="{{ old('email', Auth::user()->email) }}"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            @error('email')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end mt-4">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            {{ __('Cập nhật thông tin tài khoản') }}
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Đổi mật khẩu -->
+                <h3 class="text-lg font-medium text-gray-900 mb-3">{{ __('Đổi mật khẩu') }}</h3>
+                <form method="POST" action="{{ route('tutor.profile.update-password') }}">
+                    @csrf
+                    @method('PUT')
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Mật khẩu hiện tại -->
+                        <div>
+                            <label for="current_password" class="block text-sm font-medium text-gray-700">{{ __('Mật khẩu hiện tại') }}</label>
+                            <input id="current_password" name="current_password" type="password"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            @error('current_password')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        
+                        <!-- Mật khẩu mới -->
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700">{{ __('Mật khẩu mới') }}</label>
+                            <input id="password" name="password" type="password"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            @error('password')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        
+                        <!-- Xác nhận mật khẩu mới -->
+                        <div>
+                            <label for="password_confirmation" class="block text-sm font-medium text-gray-700">{{ __('Xác nhận mật khẩu mới') }}</label>
+                            <input id="password_confirmation" name="password_confirmation" type="password"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end mt-4">
+                        <button type="submit" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            {{ __('Đổi mật khẩu') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Thông tin Gia Sư -->
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6 bg-white border-b border-gray-200">
                 <h2 class="text-xl font-semibold mb-4">{{ __('Thông tin Gia Sư') }}</h2>
@@ -77,7 +172,7 @@
                             <label for="avatar" class="block text-sm font-medium text-gray-700">{{ __('Ảnh đại diện') }}</label>
                             @if($tutor->avatar)
                                 <div class="mb-4">
-                                    <img src="{{ Storage::url($tutor->avatar) }}" alt="Avatar" class="w-32 h-32 object-cover rounded-full">
+                                    <img src="{{ asset('storage/' . $tutor->avatar) }}" alt="Avatar" class="w-32 h-32 object-cover rounded-full">
                                 </div>
                             @endif
                             <input type="file" name="avatar" id="avatar"

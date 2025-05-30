@@ -126,7 +126,7 @@
                     </label>
                 </div>
                 <div class="mt-2 flex flex-wrap gap-2">
-                    <img src="{{ asset('images/payment/vnpay.png') }}" alt="VNPay" class="h-8 object-contain">
+                    <img src="{{ asset('images/vnpay.png') }}" alt="VNPay" class="h-8 object-contain">
                 </div>
             </div>
             

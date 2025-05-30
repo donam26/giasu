@@ -54,13 +54,11 @@ class Booking extends Model
     const PAYMENT_STATUS_REFUNDED = 'refunded'; // Đã hoàn tiền
     const PAYMENT_STATUS_PARTIAL_REFUNDED = 'partial_refunded'; // Hoàn tiền một phần
     
-    // Các trạng thái buổi học
-    const STATUS_PENDING = 'pending'; // Chờ xác nhận
-    const STATUS_CONFIRMED = 'confirmed'; // Đã xác nhận
+    // Các trạng thái buổi học - Tối ưu hóa
+    const STATUS_PENDING = 'pending'; // Chờ thanh toán
+    const STATUS_CONFIRMED = 'confirmed'; // Đã thanh toán, chờ diễn ra
     const STATUS_COMPLETED = 'completed'; // Đã hoàn thành
     const STATUS_CANCELLED = 'cancelled'; // Đã hủy
-    const STATUS_IN_PROGRESS = 'in_progress'; // Đang diễn ra
-    const STATUS_PENDING_COMPLETION = 'pending_completion'; // Chờ xác nhận hoàn thành
 
     public function student()
     {
@@ -136,18 +134,18 @@ class Booking extends Model
      */
     public function canBeCompleted()
     {
+        // Đơn giản hóa: Chỉ cần thanh toán và buổi học đã kết thúc
         return $this->status === self::STATUS_CONFIRMED && 
                $this->isPaid() && 
-               $this->student_confirmed && 
-               $this->tutor_confirmed;
+               $this->hasEnded();
     }
 
     /**
-     * Kiểm tra xem buổi học có phải đang chờ xác nhận hoàn thành không
+     * Kiểm tra xem buổi học có phải đang chờ xác nhận hoàn thành không - Không cần thiết nữa
      */
     public function isPendingCompletion()
     {
-        return $this->status === self::STATUS_PENDING_COMPLETION;
+        return false; // Loại bỏ trạng thái này
     }
 
     /**

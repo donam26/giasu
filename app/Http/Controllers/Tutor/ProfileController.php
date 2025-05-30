@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Tutor;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules;
 use App\Models\Subject;
 
 class ProfileController extends Controller
@@ -53,10 +56,6 @@ class ProfileController extends Controller
             'subject_prices.*.price.min' => 'Giá theo giờ cho môn học phải lớn hơn hoặc bằng 0',
         ]);
 
-        if ($request->hasFile('avatar')) {
-            $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
-        }
-
         // Cập nhật thông tin cơ bản
         $tutor->update([
             'education_level' => $validated['education_level'],
@@ -67,8 +66,19 @@ class ProfileController extends Controller
             'hourly_rate' => $validated['hourly_rate'],
         ]);
 
+        // Xử lý cập nhật avatar
         if ($request->hasFile('avatar')) {
-            $tutor->avatar = $validated['avatar'];
+            // Xóa avatar cũ nếu có
+            if ($tutor->avatar && Storage::disk('public')->exists($tutor->avatar)) {
+                Storage::disk('public')->delete($tutor->avatar);
+            }
+            
+            // Lưu avatar mới với tên duy nhất
+            $avatarName = 'avatars/' . $tutor->id . '_' . time() . '.' . $request->avatar->extension();
+            $request->avatar->storeAs('', $avatarName, 'public');
+            
+            // Cập nhật đường dẫn avatar trong database
+            $tutor->avatar = $avatarName;
             $tutor->save();
         }
 
@@ -113,5 +123,46 @@ class ProfileController extends Controller
         }
 
         return back()->with('success', 'Thông tin gia sư đã được cập nhật thành công.');
+    }
+    
+    /**
+     * Cập nhật thông tin tài khoản từ trang profile gia sư
+     */
+    public function updateAccount(Request $request)
+    {
+        $user = Auth::user();
+        
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users')->ignore($user->id)],
+        ]);
+        
+        $user->name = $request->name;
+        
+        if ($user->email !== $request->email) {
+            $user->email = $request->email;
+            $user->email_verified_at = null; // Nếu email thay đổi, yêu cầu xác thực lại
+        }
+        
+        $user->save();
+        
+        return redirect()->route('tutor.profile.edit')->with('success', 'Thông tin tài khoản đã được cập nhật thành công.');
+    }
+    
+    /**
+     * Cập nhật mật khẩu từ trang profile gia sư
+     */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+        
+        $user = Auth::user();
+        $user->password = Hash::make($request->password);
+        $user->save();
+        
+        return redirect()->route('tutor.profile.edit')->with('success', 'Mật khẩu đã được cập nhật thành công.');
     }
 } 

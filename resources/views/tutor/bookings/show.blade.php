@@ -91,7 +91,7 @@
             Quay lại
         </a>
         <div class="flex items-center space-x-4 mt-6">
-            @if(in_array($booking->status, ['pending', 'confirmed']))
+            @if($booking->status === 'pending')
                 <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST">
                     @csrf
                     @method('PATCH')
@@ -102,18 +102,7 @@
                 </form>
             @endif
 
-            @if(in_array($booking->status, ['confirmed']))
-                <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST">
-                    @csrf
-                    @method('PATCH')
-                    <input type="hidden" name="status" value="scheduled">
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        Lên lịch
-                    </button>
-                </form>
-            @endif
-
-            @if(in_array($booking->status, ['confirmed', 'scheduled']) && !$booking->hasPendingRescheduleRequest() && now()->diffInHours($booking->start_time, false) >= 24)
+            @if($booking->status === 'confirmed' && !$booking->hasPendingRescheduleRequest() && now()->diffInHours($booking->start_time, false) >= 24)
                 <a href="{{ route('tutor.bookings.reschedule', $booking) }}" class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500">
                     Đổi lịch
                 </a>
@@ -125,18 +114,16 @@
                 </a>
             @endif
 
-            @if(in_array($booking->status, ['confirmed', 'scheduled']))
-                <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST">
+            @if($booking->status === 'confirmed' && $booking->hasEnded())
+                <form action="{{ route('tutor.bookings.confirm-completion', $booking) }}" method="POST">
                     @csrf
-                    @method('PATCH')
-                    <input type="hidden" name="status" value="completed">
                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        Hoàn thành
+                        Xác nhận hoàn thành
                     </button>
                 </form>
             @endif
 
-            @if(in_array($booking->status, ['pending', 'confirmed', 'scheduled']))
+            @if(in_array($booking->status, ['pending', 'confirmed']))
                 <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST">
                     @csrf
                     @method('PATCH')

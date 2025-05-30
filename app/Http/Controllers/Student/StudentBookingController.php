@@ -161,6 +161,7 @@ class StudentBookingController extends Controller
             'subject_id' => $validated['subject_id'],
             'start_time' => $startTime,
             'end_time' => $endTime,
+            'day_of_week' => $startTime->dayOfWeek,
             'status' => Booking::STATUS_PENDING,
             'notes' => $validated['notes'],
             'price_per_hour' => $pricePerHour,
@@ -230,7 +231,7 @@ class StudentBookingController extends Controller
     }
     
     /**
-     * Xác nhận buổi học đã hoàn thành (từ phía học sinh)
+     * Xác nhận hoàn thành buổi học (từ phía học sinh)
      */
     public function confirmCompletion(Booking $booking)
     {
@@ -238,33 +239,28 @@ class StudentBookingController extends Controller
             abort(403, 'Bạn không có quyền xác nhận buổi học này');
         }
         
+        // Kiểm tra xem buổi học đã kết thúc chưa
         if (!$booking->hasEnded()) {
             return back()->with('error', 'Buổi học chưa kết thúc, không thể xác nhận hoàn thành');
         }
         
-        // Chỉ cho phép xác nhận nếu trạng thái là confirmed hoặc pending_completion
-        if (!in_array($booking->status, [Booking::STATUS_CONFIRMED, Booking::STATUS_PENDING_COMPLETION])) {
+        // Kiểm tra trạng thái booking có hợp lệ không
+        if ($booking->status !== Booking::STATUS_CONFIRMED) {
             return back()->with('error', 'Không thể xác nhận buổi học ở trạng thái hiện tại');
         }
         
+        // Đơn giản hóa: Đánh dấu buổi học hoàn thành ngay lập tức
         $booking->update([
-            'student_confirmed' => true,
-            'status' => Booking::STATUS_PENDING_COMPLETION
+            'status' => Booking::STATUS_COMPLETED,
+            'completed_at' => now()
         ]);
         
-        // Kiểm tra nếu cả gia sư và học sinh đều đã xác nhận
-        if ($booking->tutor_confirmed && $booking->student_confirmed) {
-            $booking->update([
-                'status' => Booking::STATUS_COMPLETED,
-                'completed_at' => now()
-            ]);
-            
-            // Tạo bản ghi thu nhập cho gia sư
-            app(\App\Services\TutorEarningService::class)->createEarningRecord($booking);
-        }
+        // Tạo bản ghi thu nhập cho gia sư
+        app(\App\Services\TutorEarningService::class)->createEarningRecord($booking);
         
+        // Thông báo cho học sinh và chuyển hướng
         return redirect()->route('student.bookings.show', $booking)
-            ->with('success', 'Cảm ơn bạn đã xác nhận hoàn thành buổi học');
+            ->with('success', 'Cảm ơn bạn đã xác nhận hoàn thành buổi học.');
     }
     
     /**
@@ -321,7 +317,7 @@ class StudentBookingController extends Controller
             }])
             ->whereHas('bookings', function($query) use ($user) {
                 $query->where('student_id', $user->id)
-                    ->whereIn('status', [Booking::STATUS_CONFIRMED, Booking::STATUS_PENDING_COMPLETION, Booking::STATUS_IN_PROGRESS])
+                    ->where('status', Booking::STATUS_CONFIRMED)
                     ->where('end_time', '>', now());
             })
             ->where('status', 'active')
@@ -345,7 +341,7 @@ class StudentBookingController extends Controller
         $currentTutors->each(function($tutor) use ($user) {
             $tutor->latest_booking = Booking::where('student_id', $user->id)
                 ->where('tutor_id', $tutor->id)
-                ->whereIn('status', [Booking::STATUS_CONFIRMED, Booking::STATUS_IN_PROGRESS])
+                ->where('status', Booking::STATUS_CONFIRMED)
                 ->where('start_time', '>', now())
                 ->orderBy('start_time')
                 ->first();

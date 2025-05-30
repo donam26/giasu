@@ -5,15 +5,14 @@
     <div class="max-w-md w-full bg-white rounded-xl shadow-2xl overflow-hidden">
         <div class="px-8 py-6 bg-gradient-to-r from-indigo-500 to-blue-600">
             <h2 class="text-3xl font-extrabold text-white text-center">
-                Đăng Nhập
+                Quên Mật Khẩu
             </h2>
             <p class="mt-2 text-center text-indigo-200 text-sm">
-                Chào mừng bạn quay trở lại
+                Lấy lại mật khẩu cho tài khoản của bạn
             </p>
         </div>
         
         <div class="px-8 py-6">
-            <!-- Session Status -->
             @if (session('status'))
                 <div class="mb-4 rounded-md bg-green-50 p-4">
                     <div class="flex">
@@ -31,7 +30,11 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('login') }}" class="space-y-6">
+            <p class="mb-4 text-sm text-gray-600">
+                Vui lòng nhập địa chỉ email của bạn và chúng tôi sẽ gửi cho bạn một liên kết để đặt lại mật khẩu.
+            </p>
+
+            <form method="POST" action="{{ route('password.email') }}" class="space-y-5">
                 @csrf
 
                 <!-- Email Address -->
@@ -43,62 +46,34 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
                         </div>
-                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" class="pl-10 block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" class="pl-10 block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
                     </div>
                     @error('email')
                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <!-- Password -->
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700">Mật khẩu</label>
-                    <div class="mt-1 relative rounded-md shadow-sm">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
-                        </div>
-                        <input id="password" type="password" name="password" required autocomplete="current-password" class="pl-10 block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
-                    </div>
-                    @error('password')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Remember Me -->
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <input id="remember_me" type="checkbox" name="remember" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                        <label for="remember_me" class="ml-2 block text-sm text-gray-700">
-                            Ghi nhớ đăng nhập
-                        </label>
-                    </div>
-                    
-                    <div>
-                        <a href="{{ route('password.request') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                            Quên mật khẩu?
-                        </a>
-                    </div>
-                </div>
-
                 <div>
                     <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
                         <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                            <svg class="h-5 w-5 text-indigo-500 group-hover:text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                            <svg class="h-5 w-5 text-indigo-500 group-hover:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                             </svg>
                         </span>
-                        Đăng Nhập
+                        Gửi Link Đặt Lại Mật Khẩu
                     </button>
                 </div>
             </form>
 
             <div class="mt-6 text-center">
                 <p class="text-sm text-gray-600">
-                    Chưa có tài khoản?
-                    <a href="{{ route('register') }}" class="font-medium text-indigo-600 hover:text-indigo-500">
-                        Đăng ký ngay
+                    <a href="{{ route('login') }}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                        <span class="inline-flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                            </svg>
+                            Quay lại đăng nhập
+                        </span>
                     </a>
                 </p>
             </div>

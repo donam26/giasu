@@ -21,6 +21,8 @@ use App\Http\Controllers\Student\StudentBookingController;
 use App\Http\Controllers\Student\ReviewController;
 use App\Http\Controllers\PasswordController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 
 // Routes không yêu cầu đăng nhập
 Route::middleware('guest')->group(function () {
@@ -30,6 +32,16 @@ Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    
+    // Routes quên mật khẩu
+    Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
+        ->name('password.request');
+    Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
+        ->name('password.email');
+    Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
+        ->name('password.reset');
+    Route::post('reset-password', [ResetPasswordController::class, 'reset'])
+        ->name('password.update');
     
     // Trang chủ cho khách
     Route::get('/', function () {
@@ -59,6 +71,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class])->group(functi
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::put('/password', [PasswordController::class, 'update'])->name('password.update');
+    Route::post('/profile/update-avatar', [ProfileController::class, 'updateAvatar'])->name('profile.update-avatar');
 
     // Payment routes
     Route::get('/payment/{booking}/create', [PaymentController::class, 'createPayment'])->name('payment.create');
@@ -112,7 +125,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class])->group(functi
 });
 
 // Student Routes
-Route::prefix('student')->name('student.')->middleware(['auth', 'student'])->group(function () {
+Route::prefix('student')->name('student.')->middleware(['auth'])->group(function () {
     Route::get('/bookings', [StudentBookingController::class, 'index'])->name('bookings.index');
     Route::get('/bookings/tutors', [StudentBookingController::class, 'tutors'])->name('bookings.tutors');
     Route::get('/bookings/create/{tutor}', [StudentBookingController::class, 'create'])->name('bookings.create');
@@ -147,10 +160,11 @@ Route::middleware(['auth', 'tutor'])->prefix('tutor')->name('tutor.')->group(fun
     Route::get('/dashboard', [TutorDashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [TutorProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [TutorProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/account', [TutorProfileController::class, 'updateAccount'])->name('profile.update-account');
+    Route::put('/profile/password', [TutorProfileController::class, 'updatePassword'])->name('profile.update-password');
     Route::get('/bookings', [TutorBookingController::class, 'index'])->name('bookings.index');
     Route::get('/bookings/{booking}', [TutorBookingController::class, 'show'])->name('bookings.show');
     Route::patch('/bookings/{booking}/status', [TutorBookingController::class, 'updateStatus'])->name('bookings.update-status');
-    Route::post('/bookings/{booking}/start', [TutorBookingController::class, 'startClass'])->name('bookings.start');
     Route::post('/bookings/{booking}/confirm-completion', [TutorBookingController::class, 'confirmCompletion'])->name('bookings.confirm-completion');
     Route::post('/bookings/{booking}/report-issue', [TutorBookingController::class, 'reportIssue'])->name('bookings.report-issue');
     

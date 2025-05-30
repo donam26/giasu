@@ -156,12 +156,12 @@ class PaymentController extends Controller
                     'payment_status' => Booking::PAYMENT_STATUS_PAID
                 ]);
                 
-                // Nếu booking đang ở trạng thái pending, chuyển sang confirmed
+                // Tối ưu: Luôn chuyển sang confirmed sau khi thanh toán, bỏ qua bước gia sư xác nhận
                 if ($booking->status === Booking::STATUS_PENDING) {
                     $booking->update([
                         'status' => Booking::STATUS_CONFIRMED
                     ]);
-                    }
+                }
                     
                 // Gửi thông báo cho gia sư về việc có booking mới đã thanh toán
                 // TODO: Thêm notification sau
@@ -172,7 +172,7 @@ class PaymentController extends Controller
             // Chuyển hướng người dùng
             if ($success) {
                 return redirect()->route('student.bookings.show', $payment->booking_id)
-                    ->with('success', 'Thanh toán thành công');
+                    ->with('success', 'Thanh toán thành công. Buổi học đã được xác nhận tự động.');
             } else {
                 return redirect()->route('payment.create', $payment->booking_id)
                     ->with('error', 'Thanh toán thất bại. Vui lòng thử lại.');

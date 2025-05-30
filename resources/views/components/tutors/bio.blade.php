@@ -39,14 +39,6 @@
                             <span class="text-gray-600 w-32">Chuyên ngành:</span>
                             <span class="text-gray-900 font-medium">{{ $tutor->major }}</span>
                         </div>
-                        <div class="flex">
-                            <span class="text-gray-600 w-32">Năm tốt nghiệp:</span>
-                            <span class="text-gray-900 font-medium">{{ $tutor->graduation_year ?? 'Chưa cập nhật' }}</span>
-                        </div>
-                        <div class="flex">
-                            <span class="text-gray-600 w-32">GPA:</span>
-                            <span class="text-gray-900 font-medium">{{ $tutor->gpa ?? 'Chưa cập nhật' }}</span>
-                        </div>
                     </div>
                 </div>
 
