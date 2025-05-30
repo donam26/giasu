@@ -20,14 +20,29 @@ class CheckRole
     {
         $user = Auth::user();
         
-        if (!$user) {
-            return redirect()->route('login');
-        }
-        
         // Lấy route hiện tại
         $route = $request->route()->getName();
         // Lấy path của URL hiện tại
         $path = $request->path();
+        
+        // Danh sách các route công khai, không yêu cầu đăng nhập
+        $publicRoutes = [
+            'home', 'login', 'register', 'password.request', 'password.email', 
+            'password.reset', 'password.update', 'tutors.index', 'tutors.show',
+            'subjects.index', 'subjects.show', 'privacy-policy', 'about-us',
+            'contact', 'faq', 'guide', 'terms', 'tutors.register', 'tutors.create',
+            'payment.callback'
+        ];
+        
+        // Kiểm tra nếu đường dẫn là trang chủ
+        if ($path === '/' || in_array($route, $publicRoutes)) {
+            return $next($request);
+        }
+        
+        // Kiểm tra nếu người dùng chưa đăng nhập
+        if (!$user) {
+            return redirect()->route('login');
+        }
         
         // Nếu là admin, cho phép truy cập tất cả
         if ($user->is_admin) {
@@ -37,7 +52,7 @@ class CheckRole
         // Nếu là gia sư, chỉ cho phép truy cập URL có đường dẫn /tutor
         if ($user->isTutor() && $user->tutor && $user->tutor->status === 'active') {
             // Kiểm tra các route public mà gia sư được phép truy cập
-            if (in_array($route, ['logout', 'profile.edit', 'profile.update', 'profile.destroy', 'password.update'])) {
+            if (in_array($route, ['logout', 'profile.edit', 'profile.update', 'profile.destroy', 'profile.password.update'])) {
                 return $next($request);
             }
             

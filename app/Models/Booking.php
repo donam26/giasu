@@ -145,7 +145,7 @@ class Booking extends Model
      */
     public function isPendingCompletion()
     {
-        return false; // Loại bỏ trạng thái này
+        return $this->status === self::STATUS_CONFIRMED && $this->hasEnded();
     }
 
     /**

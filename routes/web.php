@@ -70,7 +70,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class])->group(functi
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::put('/password', [PasswordController::class, 'update'])->name('password.update');
+    Route::put('/password', [PasswordController::class, 'update'])->name('profile.password.update');
     Route::post('/profile/update-avatar', [ProfileController::class, 'updateAvatar'])->name('profile.update-avatar');
 
     // Payment routes

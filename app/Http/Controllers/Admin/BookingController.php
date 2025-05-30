@@ -29,7 +29,8 @@ class BookingController extends Controller
             ->paginate(5, ['*'], 'confirmed');
             
         $pendingCompletionBookings = Booking::with(['student', 'tutor.user', 'subject'])
-            ->where('status', Booking::STATUS_PENDING_COMPLETION)
+            ->where('status', Booking::STATUS_CONFIRMED)
+            ->where('end_time', '<', now())
             ->latest('end_time')
             ->paginate(5, ['*'], 'pending_completion');
             
