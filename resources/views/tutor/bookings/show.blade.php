@@ -123,17 +123,6 @@
                 </form>
             @endif
 
-            @if(in_array($booking->status, ['pending', 'confirmed']))
-                <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST">
-                    @csrf
-                    @method('PATCH')
-                    <input type="hidden" name="status" value="cancelled">
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-                        onclick="return confirm('Bạn có chắc chắn muốn hủy buổi học này?')">
-                        Hủy
-                    </button>
-                </form>
-            @endif
         </div>
     </div>
 </div>

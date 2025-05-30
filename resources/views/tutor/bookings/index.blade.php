@@ -77,25 +77,14 @@
                                     </form>
                                 @endif
                                 @if($booking->status == 'confirmed')
-                                    <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST" class="inline">
+                                    <form action="{{ route('tutor.bookings.confirm-completion', $booking) }}" method="POST" class="inline">
                                         @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="status" value="completed">
                                         <button type="submit" class="text-blue-600 hover:text-blue-900 mr-3">
                                             Hoàn thành
                                         </button>
                                     </form>
                                 @endif
-                                @if($booking->status == 'pending' || $booking->status == 'confirmed')
-                                    <form action="{{ route('tutor.bookings.update-status', $booking) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="status" value="cancelled">
-                                        <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Bạn có chắc chắn muốn hủy buổi học này?')">
-                                            Hủy
-                                        </button>
-                                    </form>
-                                @endif
+                            
                             </td>
                         </tr>
                     @empty
