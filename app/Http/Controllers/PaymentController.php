@@ -161,7 +161,7 @@ class PaymentController extends Controller
                     $booking->update([
                         'status' => Booking::STATUS_CONFIRMED
                     ]);
-                }
+                    }
                     
                 // Gửi thông báo cho gia sư về việc có booking mới đã thanh toán
                 // TODO: Thêm notification sau

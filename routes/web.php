@@ -57,7 +57,6 @@ Route::get('/tutors/become', [TutorController::class, 'create'])->name('tutors.c
 Route::get('/payment/vnpay/callback', [PaymentController::class, 'handleCallback'])->name('payment.callback');
 
 // Các routes yêu cầu đăng nhập
-Route::middleware(['auth', \App\Http\Middleware\CheckRole::class])->group(function () {
     // Trang chủ cho người đã đăng nhập (áp dụng CheckRole)
     Route::get('/', function () {
         return view('pages.home');
@@ -122,7 +121,6 @@ Route::middleware(['auth', \App\Http\Middleware\CheckRole::class])->group(functi
     Route::get('/terms', function () {
         return view('pages.terms');
     })->name('terms');
-});
 
 // Student Routes
 Route::prefix('student')->name('student.')->middleware(['auth'])->group(function () {

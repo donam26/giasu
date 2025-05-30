@@ -98,15 +98,17 @@ class AIAdvisorController extends Controller
                 
                 Khi học sinh đưa ra yêu cầu, xử lý NGAY LẬP TỨC:
                 1. Chào hỏi thân thiện
-                2. Xác nhận thông tin đã hiểu từ yêu cầu (môn học, cấp học, mức giá...)
-                3. Thông báo "Tôi đã tìm thấy một số gia sư phù hợp trong hệ thống của chúng tôi"
-                4. Gợi ý "Bạn có thể bấm nút Tổng kết ngay để xem danh sách gia sư được đề xuất"
+                2. XÁC NHẬN RÕ RÀNG thông tin đã hiểu từ yêu cầu, ĐẶC BIỆT LÀ MÔN HỌC
+                3. Nếu họ tìm gia sư Toán, xác nhận lại "Bạn đang tìm gia sư dạy môn Toán, đúng không?"
+                4. Nếu họ chưa đề cập môn học, HÃY HỎI NGAY "Bạn đang tìm gia sư dạy môn học nào?"
+                5. Nếu họ đề cập nhiều môn, xác nhận lại "Bạn đang tìm gia sư dạy các môn X, Y, Z phải không?"
+                6. Thông báo "Tôi đã tìm thấy một số gia sư dạy [MÔN HỌC] phù hợp trong hệ thống của chúng tôi"
+                7. Gợi ý "Bạn có thể bấm nút Tổng kết ngay để xem danh sách gia sư được đề xuất"
                 
-                KHÔNG hỏi quá nhiều chi tiết - chỉ xác nhận lại thông tin người dùng đã cung cấp và hướng dẫn họ bấm nút Tổng kết.
+                ƯU TIÊN XÁC NHẬN MÔN HỌC, sau đó mới là cấp học, mức giá...
                 
                 TUYỆT ĐỐI KHÔNG:
                 - Không giới thiệu các nền tảng khác
-                - Không yêu cầu quá nhiều thông tin chi tiết
                 - Không trả lời dài dòng
                 
                 Tất cả các đề xuất phải là về việc sử dụng hệ thống của chúng ta để tìm gia sư phù hợp.
@@ -245,19 +247,25 @@ class AIAdvisorController extends Controller
 
             $systemMessage = [
                 'role' => 'system',
-                'content' => 'Phân tích yêu cầu tìm gia sư và trả về JSON. Hãy phỏng đoán thông tin từ yêu cầu:
-                1. Nếu người dùng chỉ đề cập môn học như "tìm gia sư Toán", hãy mặc định họ cần gia sư Toán cho học sinh THPT
-                2. Nếu người dùng chỉ đề cập học phí như "dưới 500k", hãy giới hạn max_price là 500000
-                3. Nếu không có thông tin gì, hãy trả về các giá trị mặc định: môn học phổ biến, không giới hạn học phí
-                
-                {
-                    "subjects": ["Toán", "Lý", ...],
-                    "class_levels": ["Lớp 10", "Lớp 11", ...],
-                    "teaching_method": "online/offline/both",
-                    "max_price": 500000,
-                    "location": "Hà Nội",
-                    "requirements": "Yêu cầu thêm"
-                }'
+                'content' => 'Phân tích yêu cầu tìm gia sư và trả về JSON. 
+
+QUAN TRỌNG NHẤT: Xác định chính xác môn học mà người dùng cần. Ưu tiên môn học đầu tiên họ đề cập.
+
+Hướng dẫn chi tiết:
+1. MÔN HỌC LÀ TIÊU CHÍ QUAN TRỌNG NHẤT - Bất kỳ từ nào liên quan đến môn học (Toán, Lý, Hóa, Văn, Anh, Sinh...) phải được ưu tiên cao nhất
+2. Nếu người dùng chỉ đề cập một môn học như "tìm gia sư Toán", subjects CHỈ NÊN CÓ ["Toán"] không thêm môn khác
+3. Nếu người dùng đề cập nhiều môn, giữ đúng thứ tự ưu tiên mà họ nhắc đến
+4. Không thêm môn học nào mà người dùng không đề cập đến
+5. Nếu không đề cập môn cụ thể, để trống mảng subjects
+
+{
+    "subjects": ["Toán"], // CHỈ liệt kê môn học người dùng đề cập, không thêm môn khác
+    "class_levels": ["Lớp 10", "Lớp 11", ...],
+    "teaching_method": "online/offline/both",
+    "max_price": 500000,
+    "location": "Hà Nội",
+    "requirements": "Yêu cầu thêm"
+}'
             ];
 
             try {
@@ -335,8 +343,34 @@ class AIAdvisorController extends Controller
                 
                 $tutors = $query->get();
                 
-                if ($tutors->isEmpty()) {
+                if ($tutors->isEmpty() && empty($preferences['subjects'])) {
                     return $this->getFallbackRecommendations();
+                } elseif ($tutors->isEmpty()) {
+                    // Đây là trường hợp có subjects nhưng không tìm thấy gia sư
+                    // Tìm kiếm gần đúng với môn học
+                    $similarSubjects = Subject::whereIn('name', $preferences['subjects'])
+                        ->orWhere(function($q) use ($preferences) {
+                            foreach($preferences['subjects'] as $subject) {
+                                $q->orWhere('name', 'like', '%' . $subject . '%');
+                            }
+                        })
+                        ->pluck('name')
+                        ->toArray();
+                    
+                    if (!empty($similarSubjects)) {
+                        $query = Tutor::with(['user', 'subjects', 'classLevels', 'reviews'])
+                            ->where('status', 'active')
+                            ->where('is_verified', true)
+                            ->whereHas('subjects', function ($q) use ($similarSubjects) {
+                                $q->whereIn('name', $similarSubjects);
+                            });
+                        
+                        $tutors = $query->get();
+                    }
+                    
+                    if ($tutors->isEmpty()) {
+                        return $this->getFallbackRecommendationsWithSubjects($preferences['subjects']);
+                    }
                 }
             }
             
@@ -419,25 +453,42 @@ class AIAdvisorController extends Controller
     {
         $score = 0;
         $weights = [
-            'subjects' => 0.3,
-            'class_levels' => 0.2,
-            'teaching_method' => 0.15,
-            'price' => 0.15,
-            'location' => 0.1,
+            'subjects' => 0.5, // Tăng trọng số cho môn học
+            'class_levels' => 0.15,
+            'teaching_method' => 0.1,
+            'price' => 0.1,
+            'location' => 0.05,
             'experience' => 0.1
         ];
 
-        // Môn học
+        // Môn học - ưu tiên khớp chính xác môn học
         if (isset($preferences['subjects']) && !empty($preferences['subjects'])) {
-            $matchingSubjects = $tutor->subjects->whereIn('name', $preferences['subjects'])->count();
+            $tutorSubjects = $tutor->subjects->pluck('name')->toArray();
+            $matchingSubjects = array_intersect($tutorSubjects, $preferences['subjects']);
             $totalSubjects = count($preferences['subjects']);
+            
             if ($totalSubjects > 0) {
-                $score += $weights['subjects'] * ($matchingSubjects / $totalSubjects);
+                // Nếu gia sư dạy tất cả môn học yêu cầu, điểm tối đa
+                // Nếu không, điểm dựa trên tỷ lệ khớp
+                $subjectScore = count($matchingSubjects) / $totalSubjects;
+                
+                // Nếu không có môn nào khớp, điểm = 0
+                if (count($matchingSubjects) == 0) {
+                    $subjectScore = 0;
+                }
+                
+                $score += $weights['subjects'] * $subjectScore;
             } else {
                 $score += $weights['subjects']; // Nếu không có yêu cầu môn học cụ thể
             }
         } else {
             $score += $weights['subjects']; // Nếu không có yêu cầu môn học
+        }
+
+        // Nếu điểm môn học bằng 0, trả về điểm rất thấp để loại bỏ gia sư này
+        if (isset($preferences['subjects']) && !empty($preferences['subjects']) && 
+            $score <= 0.01) {
+            return 0.01; // Điểm rất thấp, gần như loại bỏ
         }
 
         // Cấp học
@@ -519,6 +570,75 @@ class AIAdvisorController extends Controller
         }
 
         return implode(". ", $reasons);
+    }
+
+    private function getFallbackRecommendationsWithSubjects($subjects)
+    {
+        // Import Subject model nếu chưa có
+        if (!class_exists('App\Models\Subject')) {
+            class_alias('App\Models\Subject', 'Subject');
+        }
+        
+        // Tìm IDs của các môn học
+        $subjectIds = Subject::whereIn('name', $subjects)
+            ->orWhere(function($q) use ($subjects) {
+                foreach($subjects as $subject) {
+                    $q->orWhere('name', 'like', '%' . $subject . '%');
+                }
+            })
+            ->pluck('id')
+            ->toArray();
+            
+        // Log để debug
+        Log::info('Fallback with subjects', [
+            'requested_subjects' => $subjects,
+            'found_subject_ids' => $subjectIds
+        ]);
+        
+        // Nếu không tìm thấy môn học nào phù hợp
+        if (empty($subjectIds)) {
+            return $this->getFallbackRecommendations();
+        }
+        
+        // Tìm gia sư dạy các môn học này
+        $tutors = Tutor::with(['user', 'subjects', 'classLevels', 'reviews'])
+            ->where('status', 'active')
+            ->where('is_verified', true)
+            ->whereHas('subjects', function($q) use ($subjectIds) {
+                $q->whereIn('id', $subjectIds);
+            })
+            ->get()
+            ->sortByDesc(function($tutor) {
+                return $tutor->reviews->avg('rating') ?? 5.0;
+            })
+            ->take(10);
+            
+        // Nếu vẫn không tìm thấy, sử dụng fallback thông thường
+        if ($tutors->isEmpty()) {
+            return $this->getFallbackRecommendations();
+        }
+            
+        $recommendations = [];
+        foreach ($tutors as $tutor) {
+            $matchingSubjects = $tutor->subjects->whereIn('id', $subjectIds)->pluck('name')->toArray();
+            
+            $recommendations[] = [
+                'id' => $tutor->id,
+                'name' => $tutor->user->name,
+                'avatar' => $tutor->avatar ? url(Storage::url($tutor->avatar)) : null,
+                'subjects' => $tutor->subjects->pluck('name')->toArray(),
+                'class_levels' => $tutor->classLevels->pluck('name')->toArray(),
+                'hourly_rate' => $tutor->hourly_rate,
+                'rating' => number_format($tutor->reviews->avg('rating') ?? 5.0, 1),
+                'review_count' => $tutor->reviews->count(),
+                'experience_years' => $tutor->experience_years,
+                'teaching_method' => $tutor->teaching_method,
+                'matching_score' => 1.0,
+                'reason' => 'Gia sư này dạy ' . implode(', ', $matchingSubjects) . ' và có đánh giá tốt từ học sinh'
+            ];
+        }
+        
+        return $recommendations;
     }
 
     public function resetConversation(Request $request)

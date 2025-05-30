@@ -250,13 +250,13 @@ class StudentBookingController extends Controller
         }
         
         // Đơn giản hóa: Đánh dấu buổi học hoàn thành ngay lập tức
-        $booking->update([
-            'status' => Booking::STATUS_COMPLETED,
-            'completed_at' => now()
-        ]);
-        
-        // Tạo bản ghi thu nhập cho gia sư
-        app(\App\Services\TutorEarningService::class)->createEarningRecord($booking);
+            $booking->update([
+                'status' => Booking::STATUS_COMPLETED,
+                'completed_at' => now()
+            ]);
+            
+            // Tạo bản ghi thu nhập cho gia sư
+            app(\App\Services\TutorEarningService::class)->createEarningRecord($booking);
         
         // Thông báo cho học sinh và chuyển hướng
         return redirect()->route('student.bookings.show', $booking)
