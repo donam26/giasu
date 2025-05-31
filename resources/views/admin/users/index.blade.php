@@ -142,15 +142,7 @@
                         <a href="{{ route('admin.users.show', $user) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
                             Chi Tiết
                         </a>
-                        @if($user->tutor)
-                            <a href="{{ route('admin.tutors.edit', $user->tutor) }}" class="text-blue-600 hover:text-blue-900 mr-3">
-                                Sửa GS
-                            </a>
-                        @else
-                            <a href="{{ route('admin.users.edit', $user) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">
-                                Sửa TK
-                            </a>
-                        @endif
+                        
                         @if($user->id !== auth()->id())
                         <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline-block">
                             @csrf

@@ -105,9 +105,6 @@
                         <a href="{{ route('admin.tutors.show', $tutor) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
                             Chi Tiết
                         </a>
-                        <a href="{{ route('admin.tutors.edit', $tutor) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">
-                            Sửa
-                        </a>
                         <form action="{{ route('admin.tutors.destroy', $tutor) }}" method="POST" class="inline-block">
                             @csrf
                             @method('DELETE')
