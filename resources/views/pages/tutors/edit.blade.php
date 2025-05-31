@@ -82,31 +82,6 @@
                                 </div>
                             </div>
 
-                            <!-- Chứng chỉ hiện tại -->
-                            @if($tutor->certification_files)
-                                <div class="sm:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700">Chứng chỉ hiện tại</label>
-                                    <div class="mt-2 grid grid-cols-2 gap-4">
-                                        @foreach($tutor->certification_files as $file)
-                                            <div class="relative">
-                                                <img src="{{ Storage::url($file) }}" alt="Chứng chỉ" class="h-32 w-full object-cover rounded-lg">
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-
-                            <!-- Cập nhật chứng chỉ -->
-                            <div class="sm:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">
-                                    Cập nhật chứng chỉ
-                                </label>
-                                <div class="mt-1 flex items-center">
-                                    <input type="file" name="certification_files[]" multiple accept="image/*,.pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                                </div>
-                                <p class="mt-2 text-sm text-gray-500">Tải lên chứng chỉ mới sẽ thay thế các chứng chỉ cũ</p>
-                            </div>
-
                             <!-- Học phí -->
                             <div>
                                 <label for="hourly_rate" class="block text-sm font-medium text-gray-700">

@@ -43,8 +43,17 @@ class ProfileController extends Controller
      */
     public function updateAvatar(Request $request): RedirectResponse
     {
+        // Kiểm tra xem có file avatar được chọn không
+        if (!$request->hasFile('avatar')) {
+            return back()->withErrors(['avatar' => 'Vui lòng chọn một hình ảnh để tải lên.']);
+        }
+
         $request->validate([
             'avatar' => ['required', 'image', 'max:2048'],
+        ], [
+            'avatar.required' => 'Vui lòng chọn một hình ảnh để tải lên.',
+            'avatar.image' => 'File tải lên phải là hình ảnh.',
+            'avatar.max' => 'Kích thước hình ảnh không được vượt quá 2MB.',
         ]);
 
         $user = $request->user();

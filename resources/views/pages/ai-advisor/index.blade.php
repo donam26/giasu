@@ -330,6 +330,23 @@
 
         // Xử lý nút tổng kết
         summarizeBtn.addEventListener('click', async function() {
+            // Kiểm tra xem đã có kết quả hiển thị chưa
+            const existingRecommendationElements = document.querySelectorAll('.recommendation-card');
+            if (existingRecommendationElements.length > 0) {
+                // Nếu đã có kết quả, chỉ cần scroll để hiển thị kết quả đó
+                const recommendationSection = document.querySelector('.recommendation-section');
+                if (recommendationSection) {
+                    recommendationSection.classList.add('highlight');
+                    recommendationSection.scrollIntoView({ behavior: 'smooth' });
+                    
+                    // Remove highlight after 3 seconds
+                    setTimeout(() => {
+                        recommendationSection.classList.remove('highlight');
+                    }, 3000);
+                }
+                return;
+            }
+
             const loadingElement = showLoading();
             appendMessage("Đang tìm kiếm gia sư phù hợp... Vui lòng đợi trong giây lát.", false);
 

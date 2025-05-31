@@ -32,7 +32,30 @@
     </div>
 
     <div class="px-6 pb-4">
+        <div class="mb-6">
+            <h4 class="text-sm font-medium text-gray-700 mb-2">Lọc theo vai trò:</h4>
+            <div class="flex space-x-2">
+                <a href="{{ route('admin.users.index', array_merge(request()->except('role', 'page'), ['role' => 'all'])) }}" 
+                   class="px-4 py-2 rounded-md text-sm {{ !request('role') || request('role') === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    Tất cả
+                </a>
+                <a href="{{ route('admin.users.index', array_merge(request()->except('role', 'page'), ['role' => 'admin'])) }}"
+                   class="px-4 py-2 rounded-md text-sm {{ request('role') === 'admin' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    Admin
+                </a>
+                <a href="{{ route('admin.users.index', array_merge(request()->except('role', 'page'), ['role' => 'student'])) }}"
+                   class="px-4 py-2 rounded-md text-sm {{ request('role') === 'student' || (!request('role') && !isset($role)) ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    Học sinh
+                </a>
+                <a href="{{ route('admin.users.index', array_merge(request()->except('role', 'page'), ['role' => 'tutor'])) }}"
+                   class="px-4 py-2 rounded-md text-sm {{ request('role') === 'tutor' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    Gia sư
+                </a>
+            </div>
+        </div>
+
         <form action="{{ route('admin.users.index') }}" method="GET" class="flex items-center space-x-4">
+            <input type="hidden" name="role" value="{{ request('role', 'student') }}">
             <div class="flex-1">
                 <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Tìm kiếm theo tên hoặc email</label>
                 <div class="relative rounded-md shadow-sm">

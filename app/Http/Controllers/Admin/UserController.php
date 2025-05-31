@@ -8,6 +8,7 @@ use App\Models\Tutor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -25,6 +26,19 @@ class UserController extends Controller
             });
         }
         
+        // Lọc theo vai trò
+        $role = $request->get('role', 'student'); // Mặc định là học sinh
+        
+        if ($role === 'admin') {
+            $query->where('is_admin', true);
+        } elseif ($role === 'tutor') {
+            $query->whereHas('tutor');
+        } elseif ($role === 'student') {
+            $query->whereDoesntHave('tutor')
+                  ->where('is_admin', false);
+        }
+        // Nếu role=all thì không lọc
+        
         // Lấy danh sách người dùng
         $users = $query->latest()->paginate(15);
             
@@ -33,7 +47,7 @@ class UserController extends Controller
         $tutorCount = Tutor::count();
         $normalUserCount = $userCount - $tutorCount;
         
-        return view('admin.users.index', compact('users', 'userCount', 'tutorCount', 'normalUserCount'));
+        return view('admin.users.index', compact('users', 'userCount', 'tutorCount', 'normalUserCount', 'role'));
     }
 
     public function create()
@@ -117,7 +131,8 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        if ($user->id === auth()->id()) {
+        // Kiểm tra xem người dùng đang cố gắng xóa chính mình không
+        if (Auth::check() && $user->getKey() === Auth::user()->getKey()) {
             return back()->with('error', 'Không thể xóa tài khoản của chính mình.');
         }
 
