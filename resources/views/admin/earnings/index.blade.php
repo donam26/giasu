@@ -46,27 +46,6 @@
         </div>
     </div>
 
-    <!-- Nút hành động nhanh -->
-    <div class="flex flex-col md:flex-row gap-4 mb-6">
-        <form action="{{ route('admin.earnings.process-completed') }}" method="POST" class="inline-flex">
-            @csrf
-            <button type="submit" class="inline-flex items-center bg-indigo-600 px-4 py-2 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Xử lý buổi học đã hoàn thành
-            </button>
-        </form>
-        
-        <!-- Form thanh toán hàng loạt -->
-        <button id="show-mass-processing" class="inline-flex items-center bg-yellow-600 px-4 py-2 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-yellow-700 active:bg-yellow-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition ease-in-out duration-150">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Xử lý thanh toán hàng loạt
-        </button>
-    </div>
-
     <!-- Danh sách thu nhập chờ thanh toán -->
     <div class="bg-white shadow rounded-lg mb-8">
         <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
