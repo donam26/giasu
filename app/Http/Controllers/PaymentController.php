@@ -57,8 +57,8 @@ class PaymentController extends Controller
     private function createPaymentUrl($payment, $booking)
     {
         // Thông tin cấu hình thanh toán
-        $vnp_TmnCode = env('VNPAY_TMN_CODE', 'your_tmn_code');
-        $vnp_HashSecret = env('VNPAY_HASH_SECRET', 'your_hash_secret');
+        $vnp_TmnCode = 'GEBGNQZC';
+        $vnp_HashSecret = '391WOHKIIMQZIH348STZWJTF1I9LO974';
         $VNPAY_URL = env('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html');
         $vnp_Returnurl = route('payment.callback');
         
@@ -110,9 +110,6 @@ class PaymentController extends Controller
     public function handleCallback(Request $request)
     {
         Log::info('Payment callback received', $request->all());
-        
-        $vnp_TmnCode = env('VNPAY_TMN_CODE', 'your_tmn_code');
-        $vnp_HashSecret = env('VNPAY_HASH_SECRET', 'your_hash_secret');
             
         // Lấy dữ liệu từ VNPay gửi về
         $vnp_TxnRef = $request->vnp_TxnRef;

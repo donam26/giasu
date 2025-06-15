@@ -198,6 +198,31 @@
                         @enderror
                     </div>
 
+                    <!-- Cấp học -->
+                    <div class="mt-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-3">Cấp học có thể dạy</h3>
+                        <p class="text-sm text-gray-600 mb-4">Chọn các cấp học mà bạn có thể giảng dạy</p>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            @foreach($allClassLevels as $classLevel)
+                                <div class="flex items-start p-3 border border-gray-200 rounded-lg">
+                                    <div class="flex items-center h-5">
+                                        <input id="class_level_{{ $classLevel->id }}" name="class_levels[]" value="{{ $classLevel->id }}" 
+                                            type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            {{ $tutor->classLevels->contains($classLevel->id) ? 'checked' : '' }}>
+                                    </div>
+                                    <div class="ml-3">
+                                        <label for="class_level_{{ $classLevel->id }}" class="text-sm font-medium text-gray-700">{{ $classLevel->name }}</label>
+                                        <p class="text-xs text-gray-500 mt-1">{{ $classLevel->description }}</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        @error('class_levels')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <!-- Môn học -->
                     <div class="mt-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-3">Môn học dạy</h3>
@@ -224,6 +249,52 @@
                         @error('subjects')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
+                    </div>
+
+                    <!-- Quản lý giá cho từng cấp học -->
+                    <div class="mt-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-3">Quản lý giá cho từng cấp học</h3>
+                        <p class="text-sm text-gray-600 mb-4">Thiết lập giá cụ thể cho từng cấp học. Nếu để trống, hệ thống sẽ sử dụng giá mặc định.</p>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cấp học</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá mỗi giờ (VNĐ)</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chi tiết kinh nghiệm</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200" id="class-level-prices-container">
+                                    @foreach($tutor->classLevels as $classLevel)
+                                        <tr class="class-level-price-row" data-class-level-id="{{ $classLevel->id }}">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {{ $classLevel->name }}
+                                                <p class="text-xs text-gray-500">{{ $classLevel->description }}</p>
+                                                <input type="hidden" name="class_level_prices[{{ $classLevel->id }}][id]" value="{{ $classLevel->id }}">
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <div class="relative rounded-md shadow-sm">
+                                                    <input type="number" name="class_level_prices[{{ $classLevel->id }}][price]" 
+                                                        value="{{ $classLevel->pivot->price_per_hour }}" 
+                                                        class="block w-full rounded-md border-gray-300 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                        placeholder="Giá mặc định">
+                                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                                        <span class="text-gray-500 sm:text-sm">VNĐ</span>
+                                                    </div>
+                                                </div>
+                                                <p class="mt-1 text-xs text-gray-500">Giá hiện tại: @vnd($classLevel->pivot->price_per_hour)</p>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <textarea name="class_level_prices[{{ $classLevel->id }}][experience]" rows="2"
+                                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    placeholder="Chi tiết kinh nghiệm giảng dạy ở cấp học này">{{ $classLevel->pivot->experience_details }}</textarea>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <!-- Quản lý giá cho từng môn học -->
@@ -283,10 +354,12 @@
 </div>
 
 <script>
-    // Script để cập nhật bảng giá môn học khi chọn/bỏ chọn môn học
+    // Script để cập nhật bảng giá môn học và cấp học khi chọn/bỏ chọn
     document.addEventListener('DOMContentLoaded', function() {
         const subjectCheckboxes = document.querySelectorAll('input[name="subjects[]"]');
         const priceContainer = document.getElementById('subject-prices-container');
+        const classLevelCheckboxes = document.querySelectorAll('input[name="class_levels[]"]');
+        const classLevelPriceContainer = document.getElementById('class-level-prices-container');
         
         // Cập nhật hiển thị bảng giá
         function updatePriceTable() {
@@ -356,18 +429,93 @@
             priceContainer.appendChild(newRow);
         }
 
+        // Cập nhật hiển thị bảng giá cấp học
+        function updateClassLevelPriceTable() {
+            // Lấy giá mặc định hiện tại
+            const defaultPrice = document.getElementById('hourly_rate').value || 0;
+            
+            // Xóa tất cả các hàng hiện tại và tạo lại bảng
+            classLevelPriceContainer.innerHTML = '';
+            
+            // Thêm lại các hàng cho các cấp học đã chọn
+            classLevelCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const classLevelId = checkbox.value;
+                    const classLevelLabel = document.querySelector(`label[for="class_level_${classLevelId}"]`);
+                    const classLevelName = classLevelLabel ? classLevelLabel.textContent.trim() : `Cấp học ${classLevelId}`;
+                    const classLevelDesc = classLevelLabel ? classLevelLabel.parentNode.querySelector('p').textContent.trim() : '';
+                    
+                    // Tìm giá và mô tả kinh nghiệm hiện tại (nếu có)
+                    let existingPrice = defaultPrice;
+                    let existingExperience = '';
+                    
+                    const existingPriceInput = document.querySelector(`input[name="class_level_prices[${classLevelId}][price]"]`);
+                    if (existingPriceInput) {
+                        existingPrice = existingPriceInput.value;
+                    }
+                    
+                    const existingExpTextarea = document.querySelector(`textarea[name="class_level_prices[${classLevelId}][experience]"]`);
+                    if (existingExpTextarea) {
+                        existingExperience = existingExpTextarea.value;
+                    }
+                    
+                    // Tạo hàng mới
+                    createNewClassLevelPriceRow(classLevelId, classLevelName, classLevelDesc, existingPrice, existingExperience);
+                }
+            });
+        }
+
+        // Tạo hàng mới cho cấp học đã chọn
+        function createNewClassLevelPriceRow(classLevelId, classLevelName, classLevelDesc, price, experience) {
+            const newRow = document.createElement('tr');
+            newRow.className = 'class-level-price-row';
+            newRow.dataset.classLevelId = classLevelId;
+            
+            newRow.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    ${classLevelName}
+                    <p class="text-xs text-gray-500">${classLevelDesc}</p>
+                    <input type="hidden" name="class_level_prices[${classLevelId}][id]" value="${classLevelId}">
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div class="relative rounded-md shadow-sm">
+                        <input type="number" name="class_level_prices[${classLevelId}][price]" 
+                            value="${price}" 
+                            class="block w-full rounded-md border-gray-300 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            placeholder="Giá mặc định">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <span class="text-gray-500 sm:text-sm">VNĐ</span>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <textarea name="class_level_prices[${classLevelId}][experience]" rows="2"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Chi tiết kinh nghiệm giảng dạy ở cấp học này">${experience}</textarea>
+                </td>
+            `;
+            
+            classLevelPriceContainer.appendChild(newRow);
+        }
+
         // Khởi tạo bảng giá
         updatePriceTable();
+        updateClassLevelPriceTable();
 
         // Lắng nghe sự kiện thay đổi trên các checkbox môn học
         subjectCheckboxes.forEach(checkbox => {
             checkbox.addEventListener('change', updatePriceTable);
         });
+
+        // Lắng nghe sự kiện thay đổi trên các checkbox cấp học
+        classLevelCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateClassLevelPriceTable);
+        });
         
         // Lắng nghe sự kiện thay đổi giá mặc định
         document.getElementById('hourly_rate').addEventListener('change', function() {
             // Cập nhật giá mặc định cho các môn chưa được thiết lập giá
-            const emptyPriceInputs = document.querySelectorAll('input[name^="subject_prices"][name$="[price]"]');
+            const emptyPriceInputs = document.querySelectorAll('input[name^="subject_prices"][name$="[price]"], input[name^="class_level_prices"][name$="[price]"]');
             emptyPriceInputs.forEach(input => {
                 if (!input.value) {
                     input.value = this.value;

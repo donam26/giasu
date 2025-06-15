@@ -50,27 +50,6 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- Rating Filter -->
-                            <div class="space-y-2">
-                                <label for="rating" class="block text-sm font-medium text-gray-700">Đánh Giá Tối Thiểu</label>
-                                <select id="rating" name="rating" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md shadow-sm">
-                                    <option value="">Tất cả đánh giá</option>
-                                    @foreach(range(5, 1) as $rating)
-                                        <option value="{{ $rating }}" {{ request('rating') == $rating ? 'selected' : '' }}>
-                                            {{ $rating }} sao trở lên
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <!-- Teaching Method -->
-                                    <input type="hidden" hidden id="online_only" name="online_only" value="1" {{ request('online_only') ? 'checked' : '' }}
-                                           class="h-4 w-4  text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                           
-
                             <!-- Sort -->
                             <div class="space-y-2">
                                 <label for="sort_by" class="block text-sm font-medium text-gray-700">Sắp Xếp Theo</label>
@@ -82,6 +61,14 @@
                                 </select>
                             </div>
                         </div>
+
+
+                            <!-- Teaching Method -->
+                                    <input type="hidden" hidden id="online_only" name="online_only" value="1" {{ request('online_only') ? 'checked' : '' }}
+                                           class="h-4 w-4  text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                           
+
+                            
 
                         <div class="flex justify-end space-x-4">
                             <a href="{{ route('tutors.index') }}" class="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">

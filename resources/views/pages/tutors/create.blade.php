@@ -133,19 +133,46 @@
                             <!-- Cấp học -->
                             <div class="sm:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700">
-                                    Cấp học <span class="text-red-500">*</span>
+                                    Cấp học có thể dạy <span class="text-red-500">*</span>
                                 </label>
-                                <div class="mt-2 grid grid-cols-2 gap-2">
+                                <p class="text-sm text-gray-600 mb-4">Chọn các cấp học mà bạn có thể giảng dạy</p>
+                                
+                                <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                     @foreach($classLevels as $level)
-                                        <div class="relative flex items-start">
+                                        <div class="flex items-start p-3 border border-gray-200 rounded-lg">
                                             <div class="flex items-center h-5">
                                                 <input id="level_{{ $level->id }}" name="class_levels[]" value="{{ $level->id }}" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                             </div>
-                                            <div class="ml-3 text-sm">
-                                                <label for="level_{{ $level->id }}" class="font-medium text-gray-700">{{ $level->name }}</label>
+                                            <div class="ml-3">
+                                                <label for="level_{{ $level->id }}" class="text-sm font-medium text-gray-700">{{ $level->name }}</label>
+                                                <p class="text-xs text-gray-500 mt-1">{{ $level->description }}</p>
                                             </div>
                                         </div>
                                     @endforeach
+                                </div>
+                                @error('class_levels')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Quản lý giá cho từng cấp học -->
+                            <div class="sm:col-span-2 mt-4">
+                                <h3 class="text-lg font-medium text-gray-900 mb-3">Quản lý giá cho từng cấp học</h3>
+                                <p class="text-sm text-gray-600 mb-4">Thiết lập giá cụ thể cho từng cấp học. Nếu để trống, hệ thống sẽ sử dụng giá mặc định.</p>
+                                
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cấp học</th>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá mỗi giờ (VNĐ)</th>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chi tiết kinh nghiệm</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200" id="class-level-prices-container">
+                                            <!-- JavaScript sẽ tự động tạo hàng cho các cấp học đã chọn -->
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -167,10 +194,12 @@
     </div>
 
 <script>
-    // Script để cập nhật bảng giá môn học khi chọn/bỏ chọn môn học
+    // Script để cập nhật bảng giá môn học và cấp học khi chọn/bỏ chọn
     document.addEventListener('DOMContentLoaded', function() {
         const subjectCheckboxes = document.querySelectorAll('input[name="subjects[]"]');
         const priceContainer = document.getElementById('subject-prices-container');
+        const classLevelCheckboxes = document.querySelectorAll('input[name="class_levels[]"]');
+        const classLevelPriceContainer = document.getElementById('class-level-prices-container');
         
         // Cập nhật hiển thị bảng giá
         function updatePriceTable() {
@@ -244,18 +273,88 @@
             priceContainer.appendChild(newRow);
         }
 
+        // Cập nhật hiển thị bảng giá cấp học
+        function updateClassLevelPriceTable() {
+            // Lấy giá mặc định hiện tại
+            const defaultPrice = document.getElementById('hourly_rate').value || 0;
+            
+            // Xóa tất cả các hàng hiện tại và tạo lại bảng
+            classLevelPriceContainer.innerHTML = '';
+            
+            // Thêm lại các hàng cho các cấp học đã chọn
+            classLevelCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const classLevelId = checkbox.value;
+                    const classLevelLabel = document.querySelector(`label[for="level_${classLevelId}"]`);
+                    const classLevelName = classLevelLabel ? classLevelLabel.textContent.trim() : `Cấp học ${classLevelId}`;
+                    const classLevelDesc = classLevelLabel ? classLevelLabel.parentNode.querySelector('p').textContent.trim() : '';
+                    
+                    // Tìm giá và mô tả kinh nghiệm hiện tại (nếu có)
+                    let existingPrice = defaultPrice;
+                    let existingExperience = '';
+                    
+                    const existingPriceInput = document.querySelector(`input[name="class_level_prices[${classLevelId}][price]"]`);
+                    if (existingPriceInput) {
+                        existingPrice = existingPriceInput.value;
+                    }
+                    
+                    const existingExpTextarea = document.querySelector(`textarea[name="class_level_prices[${classLevelId}][experience]"]`);
+                    if (existingExpTextarea) {
+                        existingExperience = existingExpTextarea.value;
+                    }
+                    
+                    // Tạo hàng mới
+                    createNewClassLevelPriceRow(classLevelId, classLevelName, classLevelDesc, existingPrice, existingExperience);
+                }
+            });
+        }
+
+        // Tạo hàng mới cho cấp học đã chọn
+        function createNewClassLevelPriceRow(classLevelId, classLevelName, classLevelDesc, price, experience) {
+            const newRow = document.createElement('tr');
+            newRow.className = 'class-level-price-row';
+            newRow.dataset.classLevelId = classLevelId;
+            
+            newRow.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    ${classLevelName}
+                    <p class="text-xs text-gray-500">${classLevelDesc}</p>
+                    <input type="hidden" name="class_level_prices[${classLevelId}][id]" value="${classLevelId}">
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <input type="number" name="class_level_prices[${classLevelId}][price]" 
+                        value="${price}" 
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Giá mặc định">
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <textarea name="class_level_prices[${classLevelId}][experience]" rows="2"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Chi tiết kinh nghiệm giảng dạy ở cấp học này">${experience}</textarea>
+                </td>
+            `;
+            
+            classLevelPriceContainer.appendChild(newRow);
+        }
+
         // Khởi tạo bảng giá
         updatePriceTable();
+        updateClassLevelPriceTable();
 
         // Lắng nghe sự kiện thay đổi trên các checkbox môn học
         subjectCheckboxes.forEach(checkbox => {
             checkbox.addEventListener('change', updatePriceTable);
         });
+
+        // Lắng nghe sự kiện thay đổi trên các checkbox cấp học
+        classLevelCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateClassLevelPriceTable);
+        });
         
         // Lắng nghe sự kiện thay đổi giá mặc định
         document.getElementById('hourly_rate').addEventListener('change', function() {
             // Cập nhật giá mặc định cho các môn chưa được thiết lập giá
-            const emptyPriceInputs = document.querySelectorAll('input[name^="subject_prices"][name$="[price]"]');
+            const emptyPriceInputs = document.querySelectorAll('input[name^="subject_prices"][name$="[price]"], input[name^="class_level_prices"][name$="[price]"]');
             emptyPriceInputs.forEach(input => {
                 if (!input.value) {
                     input.value = this.value;

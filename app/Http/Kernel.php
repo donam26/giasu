@@ -68,6 +68,8 @@ class Kernel extends HttpKernel
         'tutor' => \App\Http\Middleware\TutorMiddleware::class,
         'student' => \App\Http\Middleware\StudentMiddleware::class,
         'checkRole' => \App\Http\Middleware\CheckRole::class,
+        'role.redirect' => \App\Http\Middleware\RoleBasedRedirect::class,
+        'adminonly' => \App\Http\Middleware\AdminOnlyMiddleware::class,
     ];
 
     /**

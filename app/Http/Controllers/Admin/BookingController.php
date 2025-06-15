@@ -20,22 +20,27 @@ class BookingController extends Controller
     {
         $pendingBookings = Booking::with(['student', 'tutor.user', 'subject'])
             ->where('status', Booking::STATUS_PENDING)
+            ->distinct()
             ->latest()
             ->paginate(5, ['*'], 'pending');
             
         $confirmedBookings = Booking::with(['student', 'tutor.user', 'subject'])
             ->where('status', Booking::STATUS_CONFIRMED)
+            ->where('end_time', '>=', now())
+            ->distinct()
             ->latest('start_time')
             ->paginate(5, ['*'], 'confirmed');
             
         $pendingCompletionBookings = Booking::with(['student', 'tutor.user', 'subject'])
             ->where('status', Booking::STATUS_CONFIRMED)
             ->where('end_time', '<', now())
+            ->distinct()
             ->latest('end_time')
             ->paginate(5, ['*'], 'pending_completion');
             
         $completedBookings = Booking::with(['student', 'tutor.user', 'subject', 'tutorEarning'])
             ->where('status', Booking::STATUS_COMPLETED)
+            ->distinct()
             ->latest('completed_at')
             ->paginate(5, ['*'], 'completed');
             

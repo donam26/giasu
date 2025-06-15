@@ -35,11 +35,9 @@
                             <select id="category" name="category" required
                                 class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                 <option value="">Chọn danh mục</option>
-                                <option value="Toán học" {{ old('category') == 'Toán học' ? 'selected' : '' }}>Toán học</option>
-                                <option value="Ngữ văn" {{ old('category') == 'Ngữ văn' ? 'selected' : '' }}>Ngữ văn</option>
+                                <option value="Khoa học xã hội" {{ old('category') == 'Khoa học xã hội' ? 'selected' : '' }}>Khoa học xã hội</option>
+                                <option value="Khoa học tự nhiên" {{ old('category') == 'Ngữ văn' ? 'selected' : '' }}>Ngữ văn</option>
                                 <option value="Ngoại ngữ" {{ old('category') == 'Ngoại ngữ' ? 'selected' : '' }}>Ngoại ngữ</option>
-                                <option value="Tự nhiên" {{ old('category') == 'Tự nhiên' ? 'selected' : '' }}>Tự nhiên</option>
-                                <option value="Xã hội" {{ old('category') == 'Xã hội' ? 'selected' : '' }}>Xã hội</option>
                             </select>
                         </div>
                         @error('category')

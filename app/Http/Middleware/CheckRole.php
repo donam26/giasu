@@ -44,9 +44,15 @@ class CheckRole
             return redirect()->route('login');
         }
         
-        // Nếu là admin, cho phép truy cập tất cả
+        // Nếu là admin, CHỈ CHO PHÉP truy cập admin routes
         if ($user->is_admin) {
-            return $next($request);
+            // Admin chỉ được truy cập admin routes và một số routes công cụ
+            if (str_starts_with($route, 'admin.') || str_starts_with($path, 'admin')) {
+                return $next($request);
+            }
+            // Redirect admin về dashboard nếu truy cập route khác
+            return redirect()->route('admin.dashboard')
+                ->with('info', 'Bạn đã được chuyển về trang quản trị.');
         }
         
         // Nếu là gia sư, chỉ cho phép truy cập URL có đường dẫn /tutor

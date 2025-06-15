@@ -11,11 +11,12 @@ use App\Models\Booking;
 use App\Models\Tutor;
 use App\Models\Review;
 use App\Models\Student;
+use App\Traits\HasRoleDashboard;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoleDashboard;
 
     /**
      * The attributes that are mass assignable.

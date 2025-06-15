@@ -19,9 +19,12 @@ class StudentBookingController extends Controller
     public function index()
     {
         $user = Auth::user();
+        
+        // Sắp xếp ưu tiên buổi học sắp tới trước, sau đó đến buổi học đã qua
         $bookings = Booking::with(['tutor.user', 'subject'])
             ->where('student_id', $user->id)
-            ->latest()
+            ->orderBy(DB::raw('start_time >= NOW()'), 'desc') // Buổi học sắp tới lên đầu
+            ->orderBy('start_time', 'asc') // Trong cùng nhóm, sắp xếp theo thời gian gần nhất
             ->paginate(10);
         
         return view('student.bookings.index', compact('bookings'));
@@ -42,6 +45,11 @@ class StudentBookingController extends Controller
             ->orderBy('start_time')
             ->get();
         
+        // Lấy danh sách booking đã có của gia sư (không bao gồm cancelled)
+        $existingBookings = Booking::where('tutor_id', $tutor->id)
+            ->where('status', '!=', Booking::STATUS_CANCELLED)
+            ->get();
+        
         // Nhóm lịch theo ngày để hiển thị trong tabs
         $availabilitiesByDate = [];
         
@@ -57,11 +65,20 @@ class StudentBookingController extends Controller
                     $availabilitiesByDate[$dateKey] = [];
                 }
                 
-                $availabilitiesByDate[$dateKey][] = [
-                    'id' => $availability->id,
-                    'start_time' => $availability->start_time,
-                    'end_time' => $availability->end_time
-                ];
+                // Kiểm tra xung đột với booking đã có
+                $hasConflict = $this->checkTimeSlotConflict(
+                    $availability->start_time, 
+                    $availability->end_time, 
+                    $existingBookings
+                );
+                
+                if (!$hasConflict) {
+                    $availabilitiesByDate[$dateKey][] = [
+                        'id' => $availability->id,
+                        'start_time' => $availability->start_time,
+                        'end_time' => $availability->end_time
+                    ];
+                }
             } elseif ($availability->is_recurring) {
                 // Ngày hiện tại + lặp qua 7 ngày tới để tìm ngày thích hợp
                 $today = Carbon::now();
@@ -85,11 +102,20 @@ class StudentBookingController extends Controller
                     $availabilitiesByDate[$dateKey] = [];
                 }
                 
-                $availabilitiesByDate[$dateKey][] = [
-                    'id' => $availability->id,
-                    'start_time' => $startDateTime,
-                    'end_time' => $endDateTime,
-                ];
+                // Kiểm tra xung đột với booking đã có
+                $hasConflict = $this->checkTimeSlotConflict(
+                    $startDateTime, 
+                    $endDateTime, 
+                    $existingBookings
+                );
+                
+                if (!$hasConflict) {
+                    $availabilitiesByDate[$dateKey][] = [
+                        'id' => $availability->id,
+                        'start_time' => $startDateTime,
+                        'end_time' => $endDateTime,
+                    ];
+                }
             }
         }
         
@@ -127,6 +153,28 @@ class StudentBookingController extends Controller
         // Đảm bảo endTime > startTime
         if ($endTime->lessThanOrEqualTo($startTime)) {
             return back()->with('error', 'Thời gian kết thúc phải sau thời gian bắt đầu');
+        }
+        
+        // Kiểm tra xung đột lịch học với các booking đã có
+        $conflictingBooking = Booking::where('tutor_id', $tutor->id)
+            ->where('status', '!=', Booking::STATUS_CANCELLED)
+            ->where(function ($query) use ($startTime, $endTime) {
+                // Kiểm tra overlap: booking mới bắt đầu trước khi booking cũ kết thúc
+                // và booking mới kết thúc sau khi booking cũ bắt đầu
+                $query->where(function ($q) use ($startTime, $endTime) {
+                    $q->where('start_time', '<', $endTime)
+                      ->where('end_time', '>', $startTime);
+                });
+            })
+            ->first();
+            
+        if ($conflictingBooking) {
+            $conflictStudent = $conflictingBooking->student;
+            $conflictTime = $conflictingBooking->start_time->format('H:i') . ' - ' . $conflictingBooking->end_time->format('H:i');
+            
+            return back()
+                ->withInput()
+                ->with('error', "Khung giờ {$conflictTime} đã có học viên khác đặt lịch. Vui lòng chọn khung giờ khác.");
         }
         
         // SỬA LỖI: Tính số giờ từ thời gian bắt đầu đến kết thúc
@@ -229,6 +277,62 @@ class StudentBookingController extends Controller
             ->with('success', 'Đã hủy lịch học thành công' . 
                 ($refundPercentage > 0 ? '. Bạn sẽ được hoàn lại ' . $refundPercentage . '% học phí' : ''));
     }
+
+    /**
+     * Đặt lại buổi học (hủy booking cũ và chuyển đến trang đặt lại)
+     */
+    public function rebook(Request $request, Booking $booking)
+    {
+        // Kiểm tra quyền truy cập
+        if ($booking->student_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền đặt lại buổi học này');
+        }
+        
+        // Chỉ cho phép đặt lại các booking đang ở trạng thái "pending" (chờ xác nhận)
+        if ($booking->status !== Booking::STATUS_PENDING) {
+            return back()->with('error', 'Chỉ có thể đặt lại những buổi học đang chờ xác nhận');
+        }
+        
+        // Lưu thông tin cần thiết trước khi hủy
+        $tutorId = $booking->tutor_id;
+        $subjectId = $booking->subject_id;
+        $notes = $booking->notes;
+        
+        try {
+            DB::beginTransaction();
+            
+            // Hủy booking cũ
+            $booking->update([
+                'status' => Booking::STATUS_CANCELLED,
+                'cancelled_reason' => 'Đặt lại bởi học sinh',
+                'cancelled_by' => 'student',
+                'refund_percentage' => 100 // Hoàn tiền 100% vì chưa được xác nhận
+            ]);
+            
+            // Xử lý hoàn tiền nếu đã thanh toán
+            if ($booking->payment_status === 'paid') {
+                $booking->update(['payment_status' => 'refunded']);
+                // TODO: Xử lý hoàn tiền qua cổng thanh toán nếu cần
+            }
+            
+            DB::commit();
+            
+            // Chuyển hướng đến trang đặt lại với thông tin cũ
+            return redirect()->route('student.bookings.create', ['tutor' => $tutorId])
+                ->with('rebook_info', [
+                    'subject_id' => $subjectId,
+                    'notes' => $notes,
+                    'original_booking_id' => $booking->id
+                ])
+                ->with('success', 'Đã hủy buổi học cũ. Vui lòng chọn lịch mới để đặt lại.');
+                
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Lỗi khi đặt lại booking: ' . $e->getMessage());
+            
+            return back()->with('error', 'Có lỗi xảy ra khi đặt lại. Vui lòng thử lại sau.');
+        }
+    }
     
     /**
      * Xác nhận hoàn thành buổi học (từ phía học sinh)
@@ -258,9 +362,20 @@ class StudentBookingController extends Controller
             // Tạo bản ghi thu nhập cho gia sư
             app(\App\Services\TutorEarningService::class)->createEarningRecord($booking);
         
-        // Thông báo cho học sinh và chuyển hướng
+            // Gửi thông báo nhắc học viên đánh giá gia sư
+            $bookingData = [
+                'booking_id' => $booking->id,
+                'tutor_id' => $booking->tutor_id,
+                'tutor_name' => $booking->tutor->user->name,
+                'subject_name' => $booking->subject->name
+            ];
+            
+            $student = \App\Models\User::find($booking->student_id);
+            $student->notify(new \App\Notifications\BookingCompleted($bookingData));
+        
+        // Thông báo cho học sinh và chuyển hướng đến trang đánh giá
         return redirect()->route('student.bookings.show', $booking)
-            ->with('success', 'Cảm ơn bạn đã xác nhận hoàn thành buổi học.');
+            ->with('success', 'Cảm ơn bạn đã xác nhận hoàn thành buổi học. Hãy để lại đánh giá về gia sư.');
     }
     
     /**
@@ -337,16 +452,31 @@ class StudentBookingController extends Controller
             ->whereNotIn('id', $currentTutors->pluck('id'))
             ->get();
             
-        // Thêm thông tin buổi học tiếp theo cho từng gia sư
+        // Thêm thông tin buổi học tiếp theo cho từng gia sư (gần nhất trước)
         $currentTutors->each(function($tutor) use ($user) {
             $tutor->latest_booking = Booking::where('student_id', $user->id)
                 ->where('tutor_id', $tutor->id)
                 ->where('status', Booking::STATUS_CONFIRMED)
                 ->where('start_time', '>', now())
-                ->orderBy('start_time')
+                ->orderBy('start_time', 'asc') // Buổi học gần nhất trước
                 ->first();
         });
             
         return view('student.bookings.tutors', compact('currentTutors', 'pastTutors'));
+    }
+    
+    /**
+     * Kiểm tra xung đột thời gian giữa khung giờ mới và các booking đã có
+     */
+    private function checkTimeSlotConflict($startTime, $endTime, $existingBookings)
+    {
+        foreach ($existingBookings as $booking) {
+            // Kiểm tra overlap: khung giờ mới bắt đầu trước khi booking cũ kết thúc
+            // và khung giờ mới kết thúc sau khi booking cũ bắt đầu
+            if ($startTime < $booking->end_time && $endTime > $booking->start_time) {
+                return true; // Có xung đột
+            }
+        }
+        return false; // Không có xung đột
     }
 } 

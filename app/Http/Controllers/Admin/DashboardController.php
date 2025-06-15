@@ -24,6 +24,7 @@ class DashboardController extends Controller
         // Lấy danh sách đặt lịch hôm nay
         $todayBookings = Booking::with(['student', 'tutor.user', 'subject'])
             ->whereDate('start_time', Carbon::today())
+            ->distinct()
             ->get();
             
         // Thống kê doanh thu và thu nhập

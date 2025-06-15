@@ -14,10 +14,14 @@ class ProfileController extends Controller
 {
     public function edit()
     {
-        $tutor = Auth::user()->tutor->load('subjects');
+        $tutor = Auth::user()->tutor->load(['subjects', 'classLevels']);
+        $allClassLevels = \App\Models\ClassLevel::where('is_active', true)
+            ->whereIn('name', ['Tiểu học', 'THCS', 'THPT'])
+            ->orderBy('order')->get();
         
         return view('tutor.profile.edit', [
-            'tutor' => $tutor
+            'tutor' => $tutor,
+            'allClassLevels' => $allClassLevels
         ]);
     }
 
@@ -39,6 +43,12 @@ class ProfileController extends Controller
             'subject_prices.*' => 'nullable|array',
             'subject_prices.*.price' => 'nullable|numeric|min:0',
             'subject_prices.*.experience' => 'nullable|string',
+            'class_levels' => 'nullable|array',
+            'class_levels.*' => 'exists:class_levels,id',
+            'class_level_prices' => 'nullable|array',
+            'class_level_prices.*' => 'nullable|array',
+            'class_level_prices.*.price' => 'nullable|numeric|min:0',
+            'class_level_prices.*.experience' => 'nullable|string',
         ], [
             'education_level.required' => 'Trình độ học vấn không được bỏ trống',
             'education_level.max' => 'Trình độ học vấn không được vượt quá 255 ký tự',
@@ -120,6 +130,49 @@ class ProfileController extends Controller
 
             // Lưu dữ liệu và đánh dấu quan hệ đã được tải lại
             $tutor->load('subjects');
+        }
+
+        // Cập nhật cấp học và giá cho từng cấp học
+        if ($request->has('class_levels')) {
+            $classLevelSyncData = [];
+            
+            // Lấy danh sách cấp học đã chọn
+            $classLevelIds = $request->class_levels;
+            
+            // Xử lý dữ liệu giá cho từng cấp học
+            foreach ($classLevelIds as $classLevelId) {
+                $pricePerHour = $tutor->hourly_rate; // Giá mặc định
+                $experienceDetails = null;
+                
+                // Nếu có thông tin giá cho cấp học này
+                if (isset($request->class_level_prices[$classLevelId])) {
+                    // Nếu có thiết lập giá cụ thể, sử dụng giá đó
+                    if (isset($request->class_level_prices[$classLevelId]['price']) && 
+                        is_numeric($request->class_level_prices[$classLevelId]['price']) && 
+                        $request->class_level_prices[$classLevelId]['price'] > 0) {
+                        $pricePerHour = $request->class_level_prices[$classLevelId]['price'];
+                    }
+                    
+                    // Lưu chi tiết kinh nghiệm
+                    if (isset($request->class_level_prices[$classLevelId]['experience'])) {
+                        $experienceDetails = $request->class_level_prices[$classLevelId]['experience'];
+                    }
+                }
+                
+                $classLevelSyncData[$classLevelId] = [
+                    'price_per_hour' => $pricePerHour,
+                    'experience_details' => $experienceDetails
+                ];
+            }
+            
+            // Đồng bộ hóa dữ liệu cấp học
+            $tutor->classLevels()->sync($classLevelSyncData);
+
+            // Lưu dữ liệu và đánh dấu quan hệ đã được tải lại
+            $tutor->load('classLevels');
+        } else {
+            // Nếu không có cấp học nào được chọn, xóa tất cả
+            $tutor->classLevels()->detach();
         }
 
         return back()->with('success', 'Thông tin gia sư đã được cập nhật thành công.');

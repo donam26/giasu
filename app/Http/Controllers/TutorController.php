@@ -71,8 +71,36 @@ class TutorController extends Controller
         
         // Sắp xếp
         if ($request->sort_by) {
-            // Nếu có tùy chọn sắp xếp, áp dụng sắp xếp theo tùy chọn
-            $query->orderBy($request->sort_by, $request->sort_order ?? 'desc');
+            // Xác định thứ tự sắp xếp phù hợp cho từng trường
+            $sortOrder = $request->sort_order;
+            
+            // Nếu không có sort_order được chỉ định, sử dụng thứ tự mặc định phù hợp
+            if (!$sortOrder) {
+                switch ($request->sort_by) {
+                    case 'hourly_rate':
+                        $sortOrder = 'asc'; // Học phí thấp nhất → tăng dần (thấp trước)
+                        Log::info('TutorController@index - Sắp xếp theo học phí thấp nhất (asc)');
+                        break;
+                    case 'rating':
+                        $sortOrder = 'desc'; // Đánh giá cao nhất → giảm dần (cao trước)
+                        Log::info('TutorController@index - Sắp xếp theo đánh giá cao nhất (desc)');
+                        break;
+                    case 'total_teaching_hours':
+                        $sortOrder = 'desc'; // Kinh nghiệm nhiều nhất → giảm dần (nhiều giờ trước)
+                        Log::info('TutorController@index - Sắp xếp theo kinh nghiệm nhiều nhất (desc)');
+                        break;
+                    default:
+                        $sortOrder = 'desc';
+                        break;
+                }
+            }
+            
+            Log::info('TutorController@index - Applying sort', [
+                'sort_by' => $request->sort_by,
+                'sort_order' => $sortOrder
+            ]);
+            
+            $query->orderBy($request->sort_by, $sortOrder);
         } else {
             // Nếu không có tùy chọn sắp xếp, sử dụng sắp xếp mặc định, ở đây là theo ID
             $query->orderBy('id', 'desc');
@@ -86,7 +114,9 @@ class TutorController extends Controller
         return view('pages.tutors.index', [
             'tutors' => $tutors,
             'subjects' => Subject::where('is_active', true)->get(),
-            'classLevels' => ClassLevel::where('is_active', true)->get()
+            'classLevels' => ClassLevel::where('is_active', true)
+                ->whereIn('name', ['Tiểu học', 'THCS', 'THPT'])
+                ->get()
         ]);
     }
 
@@ -132,7 +162,9 @@ class TutorController extends Controller
         
         return view('pages.tutors.create', [
             'subjects' => Subject::where('is_active', true)->get(),
-            'classLevels' => ClassLevel::where('is_active', true)->get()
+            'classLevels' => ClassLevel::where('is_active', true)
+                ->whereIn('name', ['Tiểu học', 'THCS', 'THPT'])
+                ->get()
         ]);
     }
 
@@ -240,7 +272,35 @@ class TutorController extends Controller
                 $tutor->subjects()->attach($syncData);
             }
 
-            $tutor->classLevels()->attach($request->class_levels);
+            // Xử lý dữ liệu cấp học và giá cho từng cấp học
+            if ($request->has('class_levels')) {
+                $classLevelSyncData = [];
+                
+                foreach ($request->class_levels as $classLevelId) {
+                    $pricePerHour = $tutor->hourly_rate; // Giá mặc định
+                    $experienceDetails = null;
+                    
+                    // Nếu có thông tin giá cho cấp học này
+                    if (isset($request->class_level_prices[$classLevelId])) {
+                        if (isset($request->class_level_prices[$classLevelId]['price']) && 
+                            is_numeric($request->class_level_prices[$classLevelId]['price']) && 
+                            $request->class_level_prices[$classLevelId]['price'] > 0) {
+                            $pricePerHour = $request->class_level_prices[$classLevelId]['price'];
+                        }
+                        
+                        if (isset($request->class_level_prices[$classLevelId]['experience'])) {
+                            $experienceDetails = $request->class_level_prices[$classLevelId]['experience'];
+                        }
+                    }
+                    
+                    $classLevelSyncData[$classLevelId] = [
+                        'price_per_hour' => $pricePerHour,
+                        'experience_details' => $experienceDetails
+                    ];
+                }
+                
+                $tutor->classLevels()->attach($classLevelSyncData);
+            }
 
             return redirect()->route('tutors.pending', $tutor)
                 ->with('success', 'Hồ sơ gia sư của bạn đã được tạo và đang chờ xét duyệt.');
@@ -358,7 +418,38 @@ class TutorController extends Controller
             $tutor->subjects()->sync($syncData);
         }
 
-        $tutor->classLevels()->sync($request->class_levels);
+        // Xử lý dữ liệu cấp học và giá cho từng cấp học
+        if ($request->has('class_levels')) {
+            $classLevelSyncData = [];
+            
+            foreach ($request->class_levels as $classLevelId) {
+                $pricePerHour = $tutor->hourly_rate; // Giá mặc định
+                $experienceDetails = null;
+                
+                // Nếu có thông tin giá cho cấp học này
+                if (isset($request->class_level_prices[$classLevelId])) {
+                    if (isset($request->class_level_prices[$classLevelId]['price']) && 
+                        is_numeric($request->class_level_prices[$classLevelId]['price']) && 
+                        $request->class_level_prices[$classLevelId]['price'] > 0) {
+                        $pricePerHour = $request->class_level_prices[$classLevelId]['price'];
+                    }
+                    
+                    if (isset($request->class_level_prices[$classLevelId]['experience'])) {
+                        $experienceDetails = $request->class_level_prices[$classLevelId]['experience'];
+                    }
+                }
+                
+                $classLevelSyncData[$classLevelId] = [
+                    'price_per_hour' => $pricePerHour,
+                    'experience_details' => $experienceDetails
+                ];
+            }
+            
+            $tutor->classLevels()->sync($classLevelSyncData);
+        } else {
+            // Nếu không có cấp học nào được chọn, xóa tất cả
+            $tutor->classLevels()->detach();
+        }
 
         return redirect()->route('tutors.show', $tutor)
             ->with('success', 'Hồ sơ gia sư đã được cập nhật thành công.');

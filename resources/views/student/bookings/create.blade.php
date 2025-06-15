@@ -3,11 +3,30 @@
 @section('content')
 <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="pb-6">
-        <h1 class="text-2xl font-semibold text-gray-900">Đặt lịch học với {{ $tutor->user->name }}</h1>
+        <h1 class="text-2xl font-semibold text-gray-900">
+            {{ session('rebook_info') ? 'Đặt lại' : 'Đặt lịch học' }} với {{ $tutor->user->name }}
+        </h1>
         <p class="mt-2 text-sm text-gray-600">
-            Vui lòng chọn một trong những khung giờ rảnh của gia sư dưới đây.
+            @if(session('rebook_info'))
+                Bạn đang đặt lại buổi học. Vui lòng chọn thời gian mới và xác nhận thông tin.
+            @else
+                Vui lòng chọn một trong những khung giờ rảnh của gia sư dưới đây.
+            @endif
         </p>
     </div>
+
+    @if(session('rebook_info'))
+        <div class="mb-6 bg-orange-50 border-l-4 border-orange-500 rounded-md p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-orange-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+              
+            </div>
+        </div>
+    @endif
 
     <!-- Thông báo lưu ý -->
     <div class="mb-6 bg-blue-50 border-l-4 border-blue-500 rounded-md p-4">
@@ -19,7 +38,7 @@
             </div>
             <div class="ml-3">
                 <p class="text-sm text-blue-700">
-                    <strong>Lưu ý:</strong> Chỉ được đặt lịch trong các khung giờ rảnh đã được hiển thị dưới đây. Hệ thống đã tự động lọc bỏ các khung giờ đã có lịch học hoặc đã qua.
+                    <strong>Lưu ý:</strong> Chỉ được đặt lịch trong các khung giờ rảnh đã được hiển thị dưới đây. Hệ thống đã tự động lọc bỏ các khung giờ đã có lịch học, đã qua hoặc bị xung đột.
                 </p>
             </div>
         </div>
@@ -62,10 +81,17 @@
                             >
                                 {{ $dayName }} {{ $formattedDate }}
                                 @if($isToday) <span class="ml-1 text-xs text-indigo-600">(Hôm nay)</span> @endif
+                                <span class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    {{ count($availabilities) }}
+                                </span>
                             </button>
                         @empty
                             <div class="py-4 text-center text-gray-500">
-                                Gia sư chưa cấu hình lịch rảnh trong 14 ngày tới. Vui lòng liên hệ gia sư hoặc quay lại sau.
+                                <svg class="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p class="font-medium">Không có khung giờ rảnh</p>
+                                <p class="text-sm">Tất cả khung giờ đã được đặt hoặc gia sư chưa cấu hình lịch rảnh.</p>
                             </div>
                         @endforelse
                     </div>
@@ -128,7 +154,11 @@
                                                 @endforeach
                                             @else
                                                 <div class="p-4 rounded-md bg-gray-50 text-gray-600 text-center">
-                                                    Không có khung giờ rảnh nào trong ngày này.
+                                                    <svg class="mx-auto h-6 w-6 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <p class="font-medium">Không có khung giờ rảnh</p>
+                                                    <p class="text-sm">Tất cả khung giờ trong ngày này đã được đặt.</p>
                                                 </div>
                                             @endif
                                         </div>
@@ -152,7 +182,8 @@
                                         <select id="subject_id" name="subject_id" class="mt-1 block w-full pl-3 pr-10 py-3 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" onchange="bookingTabSystem.calculatePrice();" required>
                                             <option value="">Chọn môn học</option>
                                             @foreach($tutor->subjects as $subject)
-                                                <option value="{{ $subject->id }}" data-price="{{ $subject->pivot->price_per_hour ?? $tutor->hourly_rate }}">
+                                                <option value="{{ $subject->id }}" data-price="{{ $subject->pivot->price_per_hour ?? $tutor->hourly_rate }}"
+                                                    {{ session('rebook_info.subject_id') == $subject->id ? 'selected' : '' }}>
                                                     {{ $subject->name }} - {{ format_vnd($subject->pivot->price_per_hour ?? $tutor->hourly_rate) }}/giờ
                                                 </option>
                                             @endforeach
@@ -175,7 +206,7 @@
                                         <div class="mt-1">
                                             <textarea id="notes" name="notes" rows="3" 
                                                 class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
-                                                placeholder="Nhập ghi chú cho gia sư về nội dung, yêu cầu hoặc mong đợi của bạn..."></textarea>
+                                                placeholder="Nhập ghi chú cho gia sư về nội dung, yêu cầu hoặc mong đợi của bạn...">{{ session('rebook_info.notes', old('notes')) }}</textarea>
                                         </div>
                                         @error('notes')
                                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
